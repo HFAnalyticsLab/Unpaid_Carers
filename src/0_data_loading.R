@@ -44,7 +44,8 @@ saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 #Combining the telephone and web waves
 post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
-  bind_rows(cf_indresp_w) %>% 
+  bind_rows(cf_indresp_w) %>%
+  distinct(pidp) %>% 
   replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 
