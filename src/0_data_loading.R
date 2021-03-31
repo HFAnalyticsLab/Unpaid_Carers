@@ -13,6 +13,7 @@ replace_with_na_all_2 <- function(df, formule) {
   df
 }
 
+`%notin%` <- Negate(`%in%`)
 
 ##Setting the working directory for data
 setwd(here::here('data'))
@@ -42,10 +43,11 @@ pre<-j_indresp %>%
 saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 
 #Combining the telephone and web waves
-post<-cg_indresp_w %>% 
+post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
-  bind_rows(cf_indresp_w) %>%
-  distinct(pidp) %>% 
+  left_join(cg_indresp_w) %>% 
+  bind_rows(cg_indresp_w %>% 
+              filter(pidp %notin% unique(c(cf_indresp_w$pidp,cf_indresp_t$pidp)))) %>% 
   replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 
