@@ -46,7 +46,7 @@ saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
   full_join(cg_indresp_w, by= "pidp") %>% 
-  mutate(caring=cf_caring, aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv)) %>% 
+  mutate(caring=as.numeric(cf_caring), aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv)) %>% 
   replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 
