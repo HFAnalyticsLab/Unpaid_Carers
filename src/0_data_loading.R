@@ -45,12 +45,9 @@ saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 #Combining the telephone and web waves
 post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
-  left_join(cg_indresp_w) %>% 
-  mutate(caring=cf_caring, aidhh=cg_aidhh,aidhrs=cg_aidhrs_cv) %>% 
-  bind_rows(cg_indresp_w %>% 
-              filter(pidp %notin% unique(c(cf_indresp_w$pidp,cf_indresp_t$pidp))) %>% 
-              mutate(aidhh=cg_aidhh,aidhrs=cg_aidhrs_cv)) %>% 
-  replace_with_na_all_2(df=.,formule = ~.x <0) 
+  full_join(cg_indresp_w, by= "pidp") %>% 
+  mutate(caring=cf_caring, aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh)) %>% 
+  replace_with_na_all_2(df=.,formule = ~.x <0) %>% 
 
 
 saveRDS(post, here::here('data', 'care_type', 'wave6_covid.rds'))
