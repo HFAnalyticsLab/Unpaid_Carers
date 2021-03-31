@@ -6,7 +6,13 @@ library(tidyverse)
 library(stringr)
 library(here)
 library(janitor)
-library(naniar)
+
+#Functions
+replace_with_na_all_2 <- function(df, formule) {
+  df[rlang::as_function(formule)(df)] <- NA
+  df
+}
+
 
 ##Setting the working directory for data
 setwd(here::here('data'))
@@ -31,14 +37,15 @@ list2env(ind, .GlobalEnv)
 ##Selecting the care_type variables only 
 pre<-j_indresp %>%
   select(pidp,j_aidxhh,j_aidhrs,j_aidhh) %>%   
-  naniar::replace_with_na_all(condition = ~.x <0)
+  replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 
 #Combining the telephone and web waves
 post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
-  naniar::replace_with_na_all(condition = ~.x <0) 
+  bind_rows(cf_indresp_w) %>% 
+  replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 
 saveRDS(post, here::here('data', 'care_type', 'wave6_covid.rds'))
