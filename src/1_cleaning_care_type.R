@@ -2,6 +2,8 @@
 
 library(gtsummary)
 library(labelled)
+library(tidyverse)
+
 
 #Functions
 `%notin%` <- Negate(`%in%`)
@@ -112,7 +114,6 @@ during %>%
 
 # Combining the two time points---------------------------------------------
 
-##both
 all<-pre %>% 
   select(pidp, carer, care_hours, same_household, diff_household) %>% 
   rename(same_household_1=same_household, diff_household_1=diff_household, carer_1=carer, care_hours_1=care_hours) %>% 
@@ -149,13 +150,17 @@ all %>%
   all %>% 
     filter(carer_all==1) %>% 
     select(carer_all, high_care_int_cont, low_care_int_cont, change_care_intensity) %>% 
-    tbl_summary(by=carer_all)
+    tbl_summary(by=carer_all, label=list(high_care_int_cont ~ ">=20 hours of care/Personal care, pre and during COVID-19",
+                                         low_care_int_cont ~ "<20 hours of care per week/Non personal tasks only, pre and during COVID-19",
+                                         change_care_intensity ~ "Changed care intensity between pre and during COVID-19"))
   
   
   all %>% 
     filter(carer_all==1) %>% 
     select(carer_all, same_household_cont, diff_household_cont, change_household) %>% 
-    tbl_summary(by=carer_all)
+    tbl_summary(by=carer_all, label= list(same_household_cont~ "Caring within household, pre and during COVID-19",
+                                          diff_household_cont~ "Caring outside household, pre and during COVID-19",
+                                          change_household~ "Change care proximity between pre and during COVID-19"))
   
   
   
