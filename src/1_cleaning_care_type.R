@@ -139,11 +139,22 @@ all<-pre %>%
                                          care_hours_1==3 & care_hours_2 %in%(1:2)~1,
                                          care_hours_1 %in% (1:2) & care_hours_2==3 ~1))
                                          
-alll %>% 
+all %>% 
   tbl_summary()
   
   all %>% 
     select(carer_all, caring_cont, caring_new, caring_stopped) %>% 
+    tbl_summary(by=carer_all)
+  
+  all %>% 
+    filter(carer_all==1) %>% 
+    select(carer_all, high_care_int_cont, low_care_int_cont, change_care_intensity) %>% 
+    tbl_summary(by=carer_all)
+  
+  
+  all %>% 
+    filter(carer_all==1) %>% 
+    select(carer_all, same_household_cont, diff_household_cont, change_household) %>% 
     tbl_summary(by=carer_all)
   
   
