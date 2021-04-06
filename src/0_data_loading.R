@@ -7,14 +7,6 @@ library(stringr)
 library(here)
 library(janitor)
 
-#Functions
-replace_with_na_all_2 <- function(df, formule) {
-  df[rlang::as_function(formule)(df)] <- NA
-  df
-}
-
-`%notin%` <- Negate(`%in%`)
-
 ##Setting the working directory for data
 setwd(here::here('data'))
 
@@ -37,8 +29,7 @@ list2env(ind, .GlobalEnv)
 
 ##Selecting the care_type variables only 
 pre<-j_indresp %>%
-  select(pidp,j_aidxhh,j_aidhrs,j_aidhh) %>%   
-  replace_with_na_all_2(df=.,formule = ~.x <0) 
+  select(pidp,j_aidxhh,j_aidhrs,j_aidhh)
 
 saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 
@@ -46,9 +37,8 @@ saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
 post<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
   full_join(cg_indresp_w, by= "pidp") %>% 
-  mutate(caring=as.numeric(cf_caring), aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv)) %>% 
-  replace_with_na_all_2(df=.,formule = ~.x <0) 
+  mutate(caring=as.numeric(cf_caring), aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv))
 
 
-saveRDS(post, here::here('data', 'care_type', 'wave6_covid.rds'))
+saveRDS(post, here::here('data', 'care_type', 'wave6n7_covid.rds'))
 
