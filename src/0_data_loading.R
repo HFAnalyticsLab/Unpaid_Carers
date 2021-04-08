@@ -38,8 +38,10 @@ post<-cf_indresp_w %>%
   bind_rows(cf_indresp_t) %>% 
   full_join(cg_indresp_w, by= "pidp") %>% 
   ##NAs= not taken part in both surveys, so taking the most recent data available
-  mutate(caring=as.numeric(cf_caring), aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv))
-
-
+  mutate(caring=ifelse(is.na(cf_caring),-10,as.numeric(cf_caring)), 
+         aidhh=ifelse(is.na(cg_aidhh), cf_aidhh, cg_aidhh), 
+         aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv))
+    #-10 means didn't take part in wave 6 but took part in wave 7
+ 
 saveRDS(post, here::here('data', 'care_type', 'wave6n7_covid.rds'))
 
