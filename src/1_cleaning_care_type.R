@@ -50,7 +50,7 @@ val_labels(during)<-NULL
 
 # Caring pre pandemic -----------------------------------------------------
 
-try<-pre %>% 
+pre<-pre %>% 
   ##unpaid carer, 1=yes, 2=no -1=missing
   mutate(carer=case_when((j_aidxhh==1|j_aidhh==1)~1,
                          j_aidxhh==2 & j_aidhh==2 ~2,
@@ -69,6 +69,8 @@ try<-pre %>%
                             carer==2~4,
                             carer<0~-1)) %>% 
   rename(diff_household=j_aidxhh,same_household=j_aidhh) 
+
+
 
 
 # Caring during pandemic --------------------------------------------------
