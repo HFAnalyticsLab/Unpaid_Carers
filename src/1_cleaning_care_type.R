@@ -6,9 +6,9 @@ library(tidyverse)
 library(officer)
 
 
-#Functions
-`%notin%` <- Negate(`%in%`)
+# Functions ---------------------------------------------------------------
 
+`%notin%` <- Negate(`%in%`)
 
 ##page doc properties for outputs
 
@@ -19,9 +19,17 @@ sect_properties <- prop_section(
   page_margins = page_mar()
 )
 
-#Loading data 
+
+# Loading data ------------------------------------------------------------
+
+
 pre <- readRDS(here::here('data','care_type','wave10.rds'))
-during<- readRDS(here::here('data','care_type','wave6_covid.rds'))
+during<- readRDS(here::here('data','care_type','wave6n7_covid.rds'))
+
+var_label(pre)<- NULL
+val_labels(pre)<-NULL
+var_label(during)<- NULL
+val_labels(during)<-NULL
 
 ##
 #pre 
@@ -34,186 +42,137 @@ during<- readRDS(here::here('data','care_type','wave6_covid.rds'))
 ##cf_aidhh/ cg_aidhh= cares for sick, disabled, elderly living with you 
 ##cf_aidhrs_cv/ cg_aidhrs_cv= hours of caring inside the household
 ## For caring outdoors, care hours is not available but you do have the type of care
-#We can extract the helping with personal needs, dealing with personal affairs, washing ironing
-##providing or cooking meals (3,4,5,6)
+#We can extract the helping with personal needs 3
+
+##Creating missing values so far, -10= did not take part in wave 7 covid sub study, -11= did not take part in wave 10
+##everything else is specified by Understanding society 
 
 
-# Pre pandemic (wave 10) --------------------------------------------------
 
-
-##removing the labels
-var_label(pre)<- NULL
-val_labels(pre)<-NULL
+# Caring pre pandemic -----------------------------------------------------
 
 pre<-pre %>% 
-  ##unpaid carer, 1=yes, 2=no
+  ##unpaid carer, 1=yes, 2=no -1=missing
   mutate(carer=case_when((j_aidxhh==1|j_aidhh==1)~1,
-                         j_aidxhh==2 & j_aidhh==2 ~2),
-  ##care_hours, 1: <20 hours 2: >= 20 hours 3=no care
+                         j_aidxhh==2 & j_aidhh==2 ~2,
+                         j_aidxhh==2 & j_aidhh<0 ~2,
+                         j_aidxhh<0 & j_aidhh==2~2,
+                         j_aidxhh<0 & j_aidhh<0 ~ -1),
+         ##care_hours, 1: <20 hours 2: >= 20 hours 3=no care
          care_hours= case_when(carer==1 & j_aidhrs %in% as.character(c(4:7,9))~ 2,
-                               carer==1 & j_aidhrs %notin% as.character(c(4:7,9,NA))~ 1,
-                               carer==2 ~ 3))%>%
+                               carer==1 & j_aidhrs %notin% as.character(c(4:7,9))~ 1,
+                               carer==2 ~ 3,
+                               carer==-1 ~ -1),
+         ##1=same_only, 2=diff_only 3==same_and_diff 4==no_caring -1==missing
+         care_loc=case_when(j_aidhh==1& (j_aidxhh==2|j_aidxhh<0)~1,
+                            j_aidxhh==1& (j_aidhh==2|j_aidhh<0)~2,
+                            j_aidhh==1& j_aidxhh==1~3,
+                            carer==2~4,
+                            carer<0~-1)
+         )%>%
   rename(diff_household=j_aidxhh,same_household=j_aidhh) 
-  
-t1<-pre %>% 
-  mutate(carehrs_label= case_when(care_hours==1~ "<20 hours per week",
-                                  care_hours==2~ ">= 20 hours per week",
-                                  care_hours== 3 ~ "No caring responsibilities")) %>% 
-  select(-c(pidp, j_aidhrs,care_hours)) %>% 
-  tbl_summary(label= list(carer~ "If unpaid carer?", diff_household~"Caring for someone in a different household?",
-                                                      same_household~"Caring for someone in the same household?",
-                          carehrs_label~ "Caring Intensity (by hours per week)"),
-                                                     percent="column") %>% 
-  bold_labels() %>% 
-  as_flex_table()
 
 
-t2<-pre %>% 
-  mutate(carehrs_label= case_when(care_hours==1~ "<20 hours per week",
-                                  care_hours==2~ ">= 20 hours per week",
-                                  care_hours== 3 ~ "No caring responsibilities")) %>% 
-  select(-c(pidp, j_aidhrs, care_hours)) %>% 
-  tbl_summary(by=carehrs_label, missing= "ifany", label= list(carer~ "If unpaid carer?", diff_household~"Caring for someone in a different household?",
-                                                           same_household~"Caring for someone in the same household?"),
-              percent="row") %>% 
-  bold_labels() %>% 
-  add_overall() %>% 
-  as_flex_table()
+# Caring during pandemic --------------------------------------------------
 
-t2<- width(t2, width = 1.5)
-##Saving the tables in one doc
-
-tf1 <-here::here('outputs','caring_pre.docx')
-
-save_as_docx('Caring Pre pandemic, Overall'= t1, 'Care Type, Pre Pandemic'=t2, 
-             path =tf1,pr_section = sect_properties)
-
-
-# During pandemic (wave 6 and 7 of covid sub study) -----------------------
-var_label(during)<- NULL
-val_labels(during)<-NULL
 
 during<-during %>% 
   ##unpaid carer, 1=yes, 2=no
   mutate(carer=case_when((aidhh== 1|caring==1)~1,
-                         caring==2 & aidhh==2 ~2),
-         ##care_hours, 1: <20 hours/Non personal tasks 2: >= 20 hours/personal tasks 3=no care       
-  care_hours= case_when(aidhh==1 & aidhrs %in% as.character(c(4:7,9)) ~ 2,
-                        caring==1 & (cf_carehow3==1 | cf_carehow4==1 | cf_carehow5==1 | cf_carehow6==1 )~ 2,
-                        aidhh==1 %notin% as.character(c(4:7,9,NA))~ 1,
-                        caring==1 & (cf_carehow1==1 | cf_carehow2==1 | cf_carehow7==1 | cf_carehow8==1 | cf_carehow9==1 | cf_carehow10==1 )~ 1,
-                        carer==2 ~ 3)) %>% 
-  rename(same_household=aidhh, diff_household=caring)
+                         caring==2 & aidhh==2 ~2,
+                         caring==2 & aidhh<0 ~2,
+                         caring<0 & aidhh==2 ~2,
+                         aidhh<0 & caring<0 ~-1),
+         ##care_hours, 1: <20 hours/Non personal tasks 2: >= 20 hours/personal tasks 3=no care -1=missing     
+         care_hours= case_when(aidhh==1 & aidhrs %in% as.character(c(4:7,9)) ~ 2,
+                               caring==1 & cf_carehow3==1 ~ 2,
+                               aidhh==1 & aidhrs %notin% as.character(c(4:7,9))~ 1,
+                               caring==1 & cf_carehow3==0~ 1,
+                               carer==2 ~ 3,
+                               carer==-1|aidhrs<0| cf_carehow3<0~-1),
+         ##1=same_only, 2=diff_only 3==same_and_diff 4==no_caring -1==missing
+         care_loc=case_when(aidhh==1& (caring==2|caring<0)~1,
+                            caring==1& (aidhh==2|aidhh<0)~2,
+                            aidhh==1& caring==1~3,
+                            carer==2~4,
+                            carer<0~-1)
+         ) %>% 
+  rename(same_household=aidhh, diff_household=caring)  
 
-t3<-during %>% 
-  mutate(carehrs_label= case_when(care_hours==1~ "<20 hours per week/Non Personal Tasks",
-                                  care_hours==2~ ">= 20 hours per week/ Personal Tasks",
-                                  care_hours== 3 ~ "No caring responsibilities")) %>% 
-  select(carehrs_label, carer, same_household, diff_household) %>% 
-  tbl_summary(label= list(carer~ "If unpaid carer?", diff_household~"Caring for someone in a different household?",
-                          same_household~"Caring for someone in the same household?",
-                          carehrs_label~ "Caring Intensity (by hours per week/type of care tasks)"),
-              percent="column") %>% 
+
+
+# Adding caring pre pandemic and during pandemic --------------------------
+
+
+during<-during %>% 
+   select(pidp, carer, care_hours, same_household, diff_household,care_loc) %>% 
+   rename(same_household_2=same_household, diff_household_2=diff_household, 
+          carer_2=carer, care_hours_2=care_hours, care_loc_2=care_loc) %>% 
+   left_join(pre %>% 
+               select(pidp, carer, care_hours, same_household, diff_household,care_loc) %>% 
+               rename(same_household_1=same_household, diff_household_1=diff_household,carer_1=carer, care_hours_1=care_hours, care_loc_1=care_loc),by="pidp") %>% 
+  ##If NA means did not take part in wave 10 (replacing this to -11) 
+    mutate_if(is.numeric, ~replace(., is.na(.), -11)) %>% 
+  ##care_loc_changes: 1=no 2=yes 3=no caring during pandemic 4=no caring pre pandemic -1=missing care data pre pandemic -2=missing care data during pandemic
+    mutate(care_loc_change=case_when(care_loc_1==1&care_loc_2==1~1, 
+                                               care_loc_1==2&care_loc_2==2~1,
+                                               care_loc_1==3&care_loc_2==3~1,
+                                               care_loc_1==1&care_loc_2==2~2,
+                                               care_loc_1==1&care_loc_2==3~2,
+                                               care_loc_1==2&care_loc_2==1~2,
+                                               care_loc_1==2&care_loc_2==3~2,
+                                               care_loc_1==3&care_loc_2==1~2,
+                                               care_loc_1==3&care_loc_2==2~2,
+                                               care_loc_2==4~3,
+                                               care_loc_1==4~4,
+                                               carer_1<0~-1,
+                                               carer_2<0~-2),
+    ##care_inten_change: 1=no 2=yes 3=no caring during pandemic 4=no caring pre pandemic -1=missing care data pre pandemic -2=missing care data during pandemic
+           care_inten_change=case_when(care_hours_1==1&care_hours_2==1~1,
+                                       care_hours_1==2&care_hours_2==2~1,
+                                       care_hours_1==1&care_hours_2==2~2,
+                                       care_hours_1==2&care_hours_2==1~2,
+                                       care_hours_2==3~3,
+                                       care_hours_1==3~4,
+                                       carer_1<0~-1,
+                                       carer_2<0~-2))
+
+# Data table ---------------------------------------------------------------
+
+try<-during %>% 
+  select(-c(pidp, same_household_2, diff_household_2, same_household_1, diff_household_1, carer_2))%>% 
+##creating data labels
+t<-try %>% 
+   mutate(care_hours2_lab=as.character(case_when(care_hours_2==1~"Low level care (<20 hours per week/non personal tasks)",
+                                  care_hours_2==2~"High level care (>=20 hours per week/personal tasks",
+                                  care_hours_2==3~"No caring",
+                                  care_hours_2<0~"Missing")),
+         care_loc2_lab=as.character(case_when(care_loc_2==1~"Within household only",
+                                care_loc_2==2~"Outside the household only",
+                                care_loc_2==3~"Within and Outside the household",
+                                care_loc_2==4~"No caring",
+                                care_loc_2<0~"Missing")),
+         carer_1_lab=as.character(case_when(carer_1==1~"Yes",
+                                            carer_1==2~"No",
+                                            carer_1<0~"Missing")),
+         care_hours1_lab=as.character(case_when(care_hours_1==1~"Low level care (<20 hours per week/non personal tasks)",
+                                                care_hours_1==2~"High level care(>=20 hours per week/personal tasks",
+                                                care_hours_1==3~"No caring",
+                                                care_hours_1<0~"Missing")),
+         care_loc_change_lab=as.character(case_when(care_loc_change==1~"No",
+                                                    care_loc_change==2~"Yes",
+                                                    care_loc_change==3~"No caring during pandemic"))) %>% 
+  select(care_hours2_lab, care_loc2_lab, carer_1_lab, care_hours1_lab, care_loc_change_lab) %>% 
+  tbl_summary(by=care_hours2_lab,label= list(carer_1_lab~ "If unpaid carer pre pandemic?", care_loc2_lab~"Caring Proximity during pandemic?",
+                                             care_hours1_lab~"Caring Intensity pre pandemic (by hours per week/care tasks)",
+                                             care_loc_change_lab~ "Change in care proxmity pre and during pandemic")) %>% 
   bold_labels() %>% 
   as_flex_table()
 
+t<-width(t, width=1.5)
 
-t4<-during %>% 
-  mutate(carehrs_label= case_when(care_hours==1~ "<20 hours per week/Non Personal Tasks",
-                                  care_hours==2~ ">= 20 hours per week/ Personal Tasks",
-                                  care_hours== 3 ~ "No caring responsibilities")) %>% 
-  select(carehrs_label, carer, same_household, diff_household) %>% 
-  tbl_summary(by=carehrs_label, missing= "ifany", label= list(carer~ "If unpaid carer?", diff_household~"Caring for someone in a different household?",
-                                                              same_household~"Caring for someone in the same household?"),
-              percent="row") %>% 
-  bold_labels() %>% 
-  add_overall() %>% 
-  as_flex_table()
-
-t4<- width(t2, width = 1.5)
-
-
-# Combining the two time points---------------------------------------------
-
-all<-pre %>% 
-  select(pidp, carer, care_hours, same_household, diff_household) %>% 
-  rename(same_household_1=same_household, diff_household_1=diff_household, carer_1=carer, care_hours_1=care_hours) %>% 
-  full_join(during %>% 
-              select(pidp, carer, care_hours, same_household, diff_household) %>% 
-              rename(same_household_2=same_household, diff_household_2=diff_household, carer_2=carer, care_hours_2=care_hours),by="pidp") %>% 
-  # 1=yes 2=no
-  mutate(carer_all= case_when((carer_1==1|carer_2==1)~1,
-                              carer_1==2 & carer_2==2~2,
-                              is.na(carer_1)& carer_2==2~2,
-                              is.na(carer_2)&carer_1==2~2),
-         caring_cont=case_when(carer_1==1&carer_2==1~ 1,  
-                               carer_1==1&(is.na(carer_2)|carer_2==2)~2,
-                               (is.na(carer_1)| carer_1==2) &carer_2==1~2),
-         caring_new=case_when((is.na(carer_1)|carer_1==2)& carer_2==1~ 1,  
-                              carer_1==1~2),
-         caring_stopped=case_when(carer_2==2& carer_1==1~ 1,  
-                                  carer_2==1~2),
-         same_household_cont=ifelse(same_household_1==1&same_household_2==1,1,2),
-         diff_household_cont=ifelse(diff_household_1==1&diff_household_2==1,1,2),
-         change_household=case_when(same_household_1==1 & diff_household_2==1 ~ 1,
-                                    diff_household_1==1 & same_household_2==1 ~ 1,
-                                    same_household_1==1 & same_household_2==1 ~ 2, 
-                                    diff_household_1==1 & diff_household_2==1 ~ 2),
-         high_care_int_cont=ifelse(care_hours_1==2& care_hours_2==2,1,2),
-         low_care_int_cont=ifelse(care_hours_1==1& care_hours_2==1,1,2),
-         change_care_intensity=case_when(care_hours_1==1& care_hours_2==2 ~ 1,
-                                         care_hours_1==2& care_hours_2==1~ 1,
-                                         care_hours_1==1 & care_hours_2==1 ~2,
-                                         care_hours_1==2& care_hours_2==2 ~2,
-                                         care_hours_1==3 & care_hours_2 %in%(1:2)~1,
-                                         care_hours_1 %in% (1:2) & care_hours_2==3 ~1))
-                                         
-all %>% 
-  filter(carer_all==1) %>% 
-  select(carer_all,caring_cont,caring_new, caring_stopped) %>% 
-  tbl_summary(by=carer_all)
+tf <-here::here('outputs','caring_during_pandemic.docx')
   
-t5<-all %>% 
-  filter(carer_all==1) %>% 
-    mutate(carer_all=ifelse(carer_all==1,"Carer"," ")) %>% 
-    select(carer_all, caring_cont, caring_new, caring_stopped) %>% 
-    tbl_summary(by=carer_all, label= list(caring_cont~ "Caring Pre and during COVID-19", caring_new~"Caring during COVID-19 only (new carers)",
-                                          caring_stopped~"Caring Pre COVID-19 only (stopped caring)")) %>% 
-    bold_labels() %>% 
-     as_flex_table()
-
-  
-t6<-all %>% 
-    filter(carer_all==1) %>% 
-    mutate(carer_all=ifelse(carer_all==1,"Carer"," ")) %>% 
-    select(carer_all, high_care_int_cont, low_care_int_cont, change_care_intensity) %>% 
-    tbl_summary(by=carer_all, label=list(high_care_int_cont ~ ">=20 hours of care/Personal care, Pre and during COVID-19",
-                                         low_care_int_cont ~ "<20 hours of care per week/Non personal tasks only, Pre and during COVID-19",
-                                         change_care_intensity ~ "Changed care intensity between Pre and during COVID-19")) %>% 
-  bold_labels() %>% 
-  as_flex_table()
-  
-  
-t7<-all %>% 
-    filter(carer_all==1) %>% 
-      mutate(carer_all=ifelse(carer_all==1,"Carer"," ")) %>% 
-    select(carer_all, same_household_cont, diff_household_cont, change_household) %>% 
-    tbl_summary(by=carer_all, label= list(same_household_cont~ "Caring within household, Pre and during COVID-19",
-                                          diff_household_cont~ "Caring outside household, Pre and during COVID-19",
-                                          change_household~ "Change care proximity between Pre and during COVID-19")) %>% 
-  bold_labels() %>% 
-  as_flex_table()
-
-  
-##Saving the tables in one doc
-  
-tf <-here::here('outputs','caring.docx')
-  
-save_as_docx('Caring Pre COVID-19, Overall'= t1, 'Care Type, Pre COVID-19'=t2,
-             'Caring during COVID-19, Overall'= t3, 'Care Type, During COVID-19'=t4, 
-             'Caring Pre and during COVID 19, Overall'=t5, 'Care Intensity, Pre and during COVID-19'=t6,
-             'Caring Proximity, Pre and during COVID-19'=t7,
-              path =tf1,pr_section = sect_properties)
-  
+save_as_docx('Carers during the pandemic'= t, path =tf,pr_section = sect_properties)
   
   
