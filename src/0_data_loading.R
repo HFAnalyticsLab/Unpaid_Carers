@@ -58,7 +58,7 @@ post<-cf_indresp_w %>%
          psu=ifelse(is.na(psu.y),psu.x,psu.y),
          strata=ifelse(is.na(strata.y),strata.x,strata.y),
          weight=ifelse(is.na(cg_betaindin_xw),cf_betaindin_xw_t,cg_betaindin_xw)) %>% 
-  select(caring, aidhh, contains("carehow"),aidhrs,psu, strata, weight)
+  select(pidp, caring, aidhh, contains("carehow"),aidhrs,psu, strata, weight)
     
  
 saveRDS(post, here::here('data', 'care_type', 'wave6n7_covid.rds'))
