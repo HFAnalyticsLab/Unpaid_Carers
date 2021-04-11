@@ -1,5 +1,12 @@
-##Loading the Understanding Society data
 
+# =======================================================
+# Project: Unpaid Carers with high care level during the pandemic
+# Purpose: Derive the care type variables 
+# Author: Anne Alarilla
+# Date: 11/04/2021
+# =======================================================
+
+#Load libraries
 library(haven)
 library(tidyr)
 library(tidyverse)

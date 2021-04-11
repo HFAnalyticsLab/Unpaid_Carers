@@ -1,5 +1,12 @@
-##Creating frequencies table for care types
 
+# =======================================================
+# Project: Unpaid Carers with high care level during the pandemic
+# Purpose: Cleaning the care type variables for COVID-19 sub study and Wave 10
+# Author: Anne Alarilla
+# Date: 11/04/2021
+# =======================================================
+
+#Load libraries
 library(gtsummary)
 library(labelled)
 library(tidyverse)
@@ -10,13 +17,6 @@ library(haven)
 # Functions ---------------------------------------------------------------
 
 `%notin%` <- Negate(`%in%`)
-
-##function that replaces values into NA
-replace_with_na_all_2 <- function(df, formule) {
-  df[rlang::as_function(formule)(df)] <- NA
-  df
-}
-
 
 # Loading data ------------------------------------------------------------
 
