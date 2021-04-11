@@ -7,10 +7,7 @@
 # =======================================================
 
 #Load libraries
-library(gtsummary)
-library(labelled)
 library(tidyverse)
-library(officer)
 library(haven)
 
 
