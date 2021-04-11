@@ -123,5 +123,4 @@ all_clean<-during %>%
                                        #Missing:no caring data during
                                        carer_2<0~-2))
 
-
-
+saveRDS(all_clean, here::here('data', 'care_type', 'caring_pandemic.rds'))
