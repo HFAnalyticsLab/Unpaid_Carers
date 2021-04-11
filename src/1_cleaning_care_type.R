@@ -45,10 +45,10 @@ pre<-pre %>%
                          j_aidxhh==2 & j_aidhh<0 ~2,
                          j_aidxhh<0 & j_aidhh==2~2,
                          j_aidxhh<0 & j_aidhh<0 ~ -1),
-         ##care_hours, 1: <20 hours 2: >= 20 hours -3=no care
+         ##care_hours, 1: <20 hours 2: >= 20 hours 3=no care
          care_hours= case_when(carer==1 & j_aidhrs %in% as.character(c(4:7,9))~ 2,
                                carer==1 & j_aidhrs %notin% as.character(c(4:7,9))~ 1,
-                               carer==2 ~ -3,
+                               carer==2 ~ 3,
                                carer==-1 ~ -1),
          ##1=same_only, 2=diff_only 3==same_and_diff -4==no_caring -1==missing
          care_loc=case_when(j_aidhh==1 &(j_aidxhh==2|j_aidxhh<0)~1,
@@ -69,12 +69,12 @@ during<-during %>%
                          caring==2 & aidhh<0 ~2,
                          caring<0 & aidhh==2 ~2,
                          aidhh<0 & caring<0 ~-1),
-         ##care_hours, 1: <20 hours/Non personal tasks 2: >= 20 hours/personal tasks -3=no care -1=missing     
+         ##care_hours, 1: <20 hours/Non personal tasks 2: >= 20 hours/personal tasks 3=no care -1=missing     
          care_hours= case_when(aidhh==1 & aidhrs %in% as.character(c(4:7,9)) ~ 2,
                                caring==1 & cf_carehow3==1 ~ 2,
                                aidhh==1 & aidhrs %notin% as.character(c(4:7,9))~ 1,
                                caring==1 & cf_carehow3==0~ 1,
-                               carer==2 ~ -3,
+                               carer==2 ~ 3,
                                carer==-1|aidhrs<0| cf_carehow3<0~-1),
          ##1=same_only, 2=diff_only 3==same_and_diff -4==no_caring -1==missing
          care_loc=case_when(aidhh==1& (caring==2|caring<0)~1,
@@ -97,7 +97,11 @@ all_clean<-during %>%
                rename(same_household_1=same_household, diff_household_1=diff_household,carer_1=carer, care_hours_1=care_hours, care_loc_1=care_loc),by="pidp") %>% 
   ##If NA means did not take part in wave 10 (replacing this to -11) 
     mutate_if(is.numeric, ~replace(., is.na(.), -11)) %>% 
-    mutate(care_loc_change=case_when(care_loc_1==1&care_loc_2==1~1, 
+    mutate(care_status=case_when(carer_1==1 & carer_2==1~1,
+                                 carer_1==2& carer_2==1~2,
+                                 carer_1==1 & carer_2==2~3,
+                                 carer_1==-1|carer_2==-2~-1),
+       care_loc_change=case_when(care_loc_1==1&care_loc_2==1~1, 
                                                care_loc_1==2&care_loc_2==2~1,
                                                care_loc_1==3&care_loc_2==3~1,
                                                care_loc_1==1&care_loc_2==2~2,
@@ -114,14 +118,14 @@ all_clean<-during %>%
                                                carer_1<0~-1,
                                      #Missing:no caring data during
                                                carer_2<0~-2),
-           care_inten_change=case_when(care_hours_1==1&care_hours_2==1~1,
+           care_type_change=case_when(care_hours_1==1&care_hours_2==1~1,
                                        care_hours_1==2&care_hours_2==2~1,
                                        care_hours_1==1&care_hours_2==2~2,
                                        care_hours_1==2&care_hours_2==1~2,
-                                     #Missing: not caring during pandemic
-                                       care_hours_2==3~3,
-                                     #Missing:not caring pre pandemic
-                                       care_hours_1==3~4,
+                                       #Missing: not caring during pandemic
+                                       care_hours_2==3~-3,
+                                       #Missing:not caring pre pandemic
+                                       care_hours_1==3~-4,
                                        #Missing: no caring data pre
                                        carer_1<0~-1,
                                        #Missing:no caring data during
