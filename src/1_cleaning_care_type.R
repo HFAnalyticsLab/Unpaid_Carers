@@ -56,7 +56,7 @@ pre<-pre %>%
                             j_aidhh==1& j_aidxhh==1~3,
                             carer==2~-4,
                             carer<0~-1)) %>% 
-  rename(diff_household=j_aidxhh,same_household=j_aidhh) 
+  rename(diff_household=j_aidxhh,same_household=j_aidhh, psu=j_psu, strata=j_strata, weight=j_indinui_xw) 
 
 
 # Caring during pandemic --------------------------------------------------
@@ -89,12 +89,13 @@ during<-during %>%
 
 
 all_clean<-during %>% 
-   select(pidp, carer, care_hours, same_household, diff_household,care_loc) %>% 
+   select(pidp, carer, care_hours, same_household, diff_household,care_loc,psu, strata, weight) %>% 
    rename(same_household_2=same_household, diff_household_2=diff_household, 
-          carer_2=carer, care_hours_2=care_hours, care_loc_2=care_loc) %>% 
+          carer_2=carer, care_hours_2=care_hours, care_loc_2=care_loc,psu_2=psu,strata_2=strata, weight_2=weight) %>% 
    left_join(pre %>% 
-               select(pidp, carer, care_hours, same_household, diff_household,care_loc) %>% 
-               rename(same_household_1=same_household, diff_household_1=diff_household,carer_1=carer, care_hours_1=care_hours, care_loc_1=care_loc),by="pidp") %>% 
+               select(pidp, carer, care_hours, same_household, diff_household,care_loc, psu,strata,weight) %>% 
+               rename(same_household_1=same_household, diff_household_1=diff_household,
+                      carer_1=carer, care_hours_1=care_hours, care_loc_1=care_loc,psu_1=psu,strata_1=strata, weight_1=weight),by="pidp") %>% 
   ##If NA means did not take part in wave 10 (replacing this to -11) 
     mutate_if(is.numeric, ~replace(., is.na(.), -11)) %>% 
     mutate(care_status=case_when(carer_1==1 & carer_2==1~1,
