@@ -13,6 +13,17 @@ library(tidyverse)
 library(stringr)
 library(here)
 library(janitor)
+library(readxl)
+
+##Reading in the variables I want
+variables <- read_excel(here::here("Variables.xlsx"))
+variables <- variables %>% 
+  remove_empty( c("rows", "cols")) %>% 
+  mutate(Name=gsub("XXX","",Name)) %>% 
+  mutate(Name=gsub("cf_","",Name))
+
+t<-variables$Name
+
 
 ##Setting the working directory for data
 setwd(here::here('data'))
@@ -24,15 +35,7 @@ listind <- list.files(here::here('data'), pattern = "*_indresp")
 ind <- lapply(listind, read_sav)
 
 ##Extracting the data set with only the caring variables that we're interested in
-ind <- lapply(ind, function(x) x%>% select(contains("aid"),
-                                            ends_with("caring"),
-                                            ends_with("pidp"),
-                                            contains("carehow"),
-                                            ends_with("psu"),
-                                            ends_with("strata"),
-                                            contains("betaindin_xw"),
-                                            contains("indinui_xw")))
-
+ind <- lapply(ind, function(x) x%>% select(contains(t)))
 
 ##Naming the data based on the waves
 names(ind) <- gsub("\\.sav$", "", listind)
@@ -40,11 +43,8 @@ names(ind) <- gsub("\\.sav$", "", listind)
 ##saving each data set as separate files in the data environment
 list2env(ind, .GlobalEnv)
 
-##Selecting the care_type variables only 
-pre<-j_indresp %>%
-  select(pidp,j_aidxhh,j_aidhrs,j_aidhh, j_psu, j_strata, j_indinui_xw)
-
-saveRDS(pre, here::here('data', 'care_type', 'wave10.rds'))
+##saving selected variables
+saveRDS(j_indresp, here::here('data', 'care_type', 'wave10.rds'))
 
 #Combining the telephone and web waves
 post<-cf_indresp_w %>% 
@@ -57,9 +57,9 @@ post<-cf_indresp_w %>%
          aidhrs=ifelse(is.na(cg_aidhrs_cv),cf_aidhrs_cv,cg_aidhrs_cv),
          psu=ifelse(is.na(psu.y),psu.x,psu.y),
          strata=ifelse(is.na(strata.y),strata.x,strata.y),
-         weight=ifelse(is.na(cg_betaindin_xw),cf_betaindin_xw_t,cg_betaindin_xw)) %>% 
-  select(pidp, caring, aidhh, contains("carehow"),aidhrs,psu, strata, weight)
-    
+         weight=ifelse(is.na(cg_betaindin_xw),cf_betaindin_xw_t,cg_betaindin_xw))
+ 
+
  
 saveRDS(post, here::here('data', 'care_type', 'wave6n7_covid.rds'))
 
