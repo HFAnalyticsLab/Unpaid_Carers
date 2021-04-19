@@ -75,6 +75,7 @@ cf_long<-cf_indresp_w %>%
   select_if(~!is.character(.)) %>% 
   pivot_longer(!c(pidp,psu, strata,birthy, racel_dv), names_to="var", values_to="cf") %>% 
   separate(var, into=c("wave","var"), sep="_", extra="merge") 
+  
 
 #Joining wave 6 and 7, taking data from wave 7 if available, if not then using wave 6 
 during<-cg_long %>%
@@ -84,6 +85,8 @@ during<-cg_long %>%
   mutate(value=ifelse(is.na(cg),cf,cg)) %>% 
   select(-c(cf, cg)) %>% 
   pivot_wider(names_from ="var", values_from ="value") %>% 
+  #two types of weights available in wave 6 but we want to use the one with the telephone as we've combined the data   
+  mutate(betaindin_xw=ifelse(is.na(betaindin_xw), betaindin_xw_t,betaindin_xw)) %>% 
   #Replacing the NAs to -6, NA because did not take part in both surveys (just one) or did not take part in telephone only variables
   mutate_if(is.numeric, ~replace(., is.na(.), -6))
 
