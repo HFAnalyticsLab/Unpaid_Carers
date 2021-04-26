@@ -15,6 +15,7 @@ library(stringr)
 library(here)
 library(janitor)
 library(readxl)
+library(labelled)
 
 
 # Selected Variable list --------------------------------------------------
@@ -27,67 +28,77 @@ variables <- variables %>%
 t<-variables$Name
 
 
-# Download Understanding society data set ---------
+# Download Understanding society data set --------
 
-#Create lists of the _indresp files-The main data set
-listind <- list.files(here::here('data'), pattern = "*_indresp")
+#Create lists of the _indresp files in the main data set
+listind <- list.files(here::here('data','stata'), pattern = "*_indresp")
+
+
+#Set working directory 
+setwd(here::here('data','stata'))
 
 #Loading the data sets
-ind <- lapply(listind, read_sav)
+ind <- lapply(listind, read_stata)
 
 ##Extracting the data sets with only the variables that we're interested in
 ind<-lapply(ind, function(x) x%>% select(contains(t),-ends_with(c("st","finishtime",
                                                                   "starttime","duration","end",
-                                                                  "outcome", "hidp","useragentstring"))))
+                                                                  "outcome", "hidp","useragentstring")),j_hidp))
 
 ##Naming the data based on the waves
-names(ind) <- gsub("\\.sav$", "", listind)
+names(ind) <- gsub("\\.dta$", "", listind)
+
 
 ##saving each data set as separate files in the data environment
 list2env(ind, .GlobalEnv)
 
 
-# Saving data -------------------------------------------
+##Loading household for income
+j_hhresp <- read_dta(file=here::here('data','stata','j_hhresp.dta'))
 
-# Pre Pandemic ------------------------------------------------------------
+income<-j_hhresp %>% 
+  select(j_hidp,j_fihhmngrs_dv)
 
-
-saveRDS(j_indresp, here::here('data', 'care_type', 'wave10.rds'))
-
-
-# COVID-19 Data -----------------------------------------------------------
-
+# Combining the waves  -------------------------------------------
 
 #Combining the telephone and web waves
-#Removing data labels
-val_labels(cg_indresp_w) <- NULL
-var_label(cg_indresp_w) <- NULL
+cg_indresp_w$wave<-"w7_cv"
+cf_indresp_w$wave<-"w6_cv"
+cf_indresp_t$wave<-"w6_cv"
 
-#Turning into long format
-cg_long<-cg_indresp_w %>% 
-  select_if(~!is.character(.)) %>%  
-  pivot_longer(!c(pidp,psu, strata,birthy, racel_dv), names_to="var", values_to="cg") %>% 
-  separate(var, into=c("wave","var"), sep="_", extra="merge") 
+wave10<- j_indresp %>% 
+  left_join(income, by.x= "j_hidp", by.y="hidp")
 
-cf_long<-cf_indresp_w %>% 
+cg_indresp_w <- cg_indresp_w %>% 
+  rename_at(vars(starts_with("cg_")),
+            ~str_replace(.,"cg_", "")) %>% 
+  arrange(pidp,wave)
+
+wave6<-cf_indresp_w %>% 
   bind_rows(cf_indresp_t) %>% 
   mutate_if(is.numeric, ~replace(., is.na(.), -6)) %>% 
-  select_if(~!is.character(.)) %>% 
-  pivot_longer(!c(pidp,psu, strata,birthy, racel_dv), names_to="var", values_to="cf") %>% 
-  separate(var, into=c("wave","var"), sep="_", extra="merge") 
+  rename_at(vars(starts_with("cf_")),
+            ~str_replace(.,"cf_", ""))
+
+covid_long<-cg_indresp_w %>% 
+  bind_rows(wave6) %>% 
+  relocate(wave, .after=pidp) %>% 
+  pivot_longer(!(c(pidp, wave)), names_to="var", values_to="val") %>% 
+  pivot_wider(names_from ="wave", values_from ="val") %>% 
+  mutate(covid=ifelse(is.na(w7_cv), w6_cv, w7_cv)) 
+ 
+
+#combining pre and covid waves
+all_wide<-covid_long %>%   
+  #Replacing the NAs to -6, NA because did not take part in both surveys (just one) or did not take part in telephone only variables
+  mutate(covid=ifelse(is.na(covid),-6,covid)) %>% 
+  select(-c(w7_cv, w6_cv)) %>% 
+  pivot_wider(names_from ="var", values_from ="covid") %>% 
+  ##Need to check if we can do this 
+  mutate(betaindin_xw=ifelse(is.na(betaindin_xw), betaindin_xw_t,betaindin_xw)) %>%  
+  left_join(wave10, by=c("pidp")) %>% 
+  ##Na if did not take part in wave 10  
+  mutate_if(is.numeric, ~replace(., is.na(.), -10))
   
 
-#Joining wave 6 and 7, taking data from wave 7 if available, if not then using wave 6 
-during<-cg_long %>%
-  select(-wave) %>% 
-  full_join(cf_long %>% 
-            select(-wave), by=c("pidp", "psu", "strata", "birthy", "racel_dv", "var")) %>% 
-  mutate(value=ifelse(is.na(cg),cf,cg)) %>% 
-  select(-c(cf, cg)) %>% 
-  pivot_wider(names_from ="var", values_from ="value") %>% 
-  #two types of weights available in wave 6 but we want to use the one with the telephone as we've combined the data   
-  mutate(betaindin_xw=ifelse(is.na(betaindin_xw), betaindin_xw_t,betaindin_xw)) %>% 
-  #Replacing the NAs to -6, NA because did not take part in both surveys (just one) or did not take part in telephone only variables
-  mutate_if(is.numeric, ~replace(., is.na(.), -6))
-
-saveRDS(during, here::here('data', 'care_type', 'wave6n7_covid.rds'))
+saveRDS(all_wide, here::here('data', 'care_type', 'caring_pandemic.rds'))
