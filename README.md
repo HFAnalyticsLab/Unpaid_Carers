@@ -1,35 +1,46 @@
-# Unpaid carers
+# Unpaid carers during the pandemic
 
-#### Project Status: [Planning / In pgrogess / Completed]
+#### Project Status: [Planning]
 
 ## Project Description
 
-- background
-- aim of the project
-- what does the code in this repo do?
-- main methods
-- links to any outputs, blogs. 
+The impact of unpaid caring is closely related to the intensity of the care provision. Evidence suggests that unpaid carers were affected negatively by the COVID-19 pandemic but previous studies have not made a distinction between different caring types. This analysis explores who the unpaid carers are during the second half of the pandemic, their state of health and how they have been able to manage their own health through accesing healthcare services. It will make a disnticion between different caring types.
+
+Currently  the code in this repo provides preliminary analysis and findings relevant to the COVID-19 Impact Inquiry. Analysis presented are mainly descriptive. It can be found here: https://rpubs.com/annealarilla/765463
 
 ## Data source
 
-Describe data sources, inlcluding links to public data or references to data sharing agreements. 
+Source: Understanding Society Data set, (Wave 10 (2018/19))[https://beta.ukdataservice.ac.uk/datacatalogue/series/series?id=2000053#!/access-data] and COVID-19 sub study Waves (6 (November 2020) and 7 (January 2021))[https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=8644]
+
 
 ## How does it work?
 
-What you need to do to reproduce the analysis or re-use the code on your local machine.  
+The code can be used to download and analyse the data. 
 
 ### Requirements
 
 Software or packages that needs to be installed and and how to install them.
 
 For example:
-These scripts were written in R version (to be added) and RStudio Version 1.1.383. 
+These scripts were written in R version 4.0 and RStudio Version 1.1.383. 
 The following R packages (available on CRAN) are needed: 
 * [**tidyverse**](https://www.tidyverse.org/)
+* [**survey**](https://cran.r-project.org/web/packages/survey/survey.pdf)
+* [**haven**](https://cran.r-project.org/web/packages/haven/index.html)
+* [**gtsummary**] (http://www.danieldsjoberg.com/gtsummary/)
 
 ### Getting started
+The 'src' folder contains
 
-Describe the way in which the code can be used. 
+(0_data_loading.R)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/0_data_loading.R] - Download data - links need to be updated for latest data
+(1_clean_care_tpye.R)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/1_cleaning_care_type.R] - Clean and save data with care type variables
+(2_demographics.R)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/2_demographics.R] - Clean, save and visualise demographics
+(3_health.R)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/3_health.R] - Clean, save and visualise health variables
+(4_access_to_services.R)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/4_access_to_services.R] -  Clean, save and visualise access to services variables
+(5_covid)[https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/5_covid.R] - Clean, save and visualise COVID-19 relate variables
+[COVID_19_Impact_Inquiry]( https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/COVID_19_Impact_Inquiry.Rmd)
+
+List of variables used can be found in the [variables excel sheet](https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/variables.xlsx) 
 
 ## Useful references
 
