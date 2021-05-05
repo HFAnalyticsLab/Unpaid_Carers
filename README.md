@@ -27,7 +27,7 @@ The following R packages (available on CRAN) are needed:
 * [**tidyverse**](https://www.tidyverse.org/)
 * [**survey**](https://cran.r-project.org/web/packages/survey/survey.pdf)
 * [**haven**](https://cran.r-project.org/web/packages/haven/index.html)
-* [**gtsummary**] (http://www.danieldsjoberg.com/gtsummary/)
+* **gtsummary**
 
 ### Getting started
 The 'src' folder contains
