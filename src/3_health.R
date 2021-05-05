@@ -76,7 +76,7 @@ h<-variables$Name
 
 
 all_h<-all %>% 
-  select(carer, carer_pre, care_hours,contains(h)) %>% 
+  select(carer, carer_pre, care_hours,contains(h),betaindin_xw,betaindin_lw, psu, strata) %>% 
   rename(Asthma=ff_hcond1, 
          Arthritis=ff_hcond2, 
          Congestive_heart_failure=ff_hcond3,
@@ -104,11 +104,34 @@ all_h<-all %>%
 all_h<-all_h %>% 
   mutate(GHQ_cv=ifelse(scghq2_dv>=6, "DS", "Non-DS"),
          GHQ_pre=ifelse(j_scghq2_dv>=6, "DS", "Non-DS"),
+         GHQ_diff=as.numeric(scghq2_dv)-as.numeric(j_scghq2_dv),
          sum_cond_all=rowSums(all_h[ ,c(6:50)], na.rm=TRUE),
          mltc=factor(case_when(sum_cond_all==0~0,
                                sum_cond_all==1~1,
                                sum_cond_all>=2~2),
                      levels=c(0,1,2), labels=c("None", "One", "2+")))
+
+saveRDS(all_h, here::here('data', 'care_type', 'health_all.rds'))
+
+
+all_h %>% 
+  select(GHQ_diff, care_hours) %>% 
+  # mutate(GHQ_diff=as.factor(GHQ_diff)) %>%
+  tbl_summary(by=care_hours, statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
+  add_p()
+
+try <- all_h %>% 
+  select(GHQ_diff, care_hours) %>%  
+  anova_test(GHQ_diff ~ care_hours)
+try
+
+# Compute the analysis of variance
+try2 <- aov(GHQ_diff ~ care_hours, data = all_h)
+# Summary of the analysis
+summary(try2)
+
+
+##regression, with the care hours, GHQ pre and GHQ during as dependent variable 
 
 top_conds<-all_h %>% 
   select(Asthma:hcondnew_cv96,care_hours) %>% 

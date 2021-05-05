@@ -57,7 +57,7 @@ variables <- variables %>%
 s<-variables$Name
 
 all_s<-all %>% 
-  select(carer, carer_pre, care_hours,contains(s)) %>% 
+  select(carer, carer_pre, care_hours,contains(s),betaindin_xw,betaindin_lw, psu, strata) %>% 
   rename(treat_OT=hcond_treat1, 
          med_immune=hcond_treat2, 
          chemo_cancer=hcond_treat3,
@@ -121,16 +121,30 @@ all_s<- all_s %>% ##Check that these are for those who needs it##
                                       chscnowpsy2 %in% c(1,2,3)~1,
                                       chscnowpsy2==4~2), levels=c(1,2),
                             labels=c("Yes","No")),
-         chscnowcarer2=factor(chscnowcarer2,levels=c(1,2,3,4),
-                              labels=c("Yes, as before", "Yes, but reduced support", "Yes, with increased support", "No")),
-         chscnowpsy2=factor(chscnowpsy2, levels=c(1,2,3,4), labels=c("Yes, in person","Yes, by telephone or online", "Yes in group sessions", "No")))
-         
+         nowcarer_lab=factor(case_when(chscnowcarer2 %in% c(1:3)~1,
+                                       chscnowcarer2==4~2),levels=c(1,2),
+                              labels=c("Yes", "No")),
+         psy_lab=factor(case_when(chscnowpsy2 %in% c(1:3)~1,
+                                  chscnowpsy2==4 ~2),levels=c(1,2), labels=c("Yes","No")),
+         nowcarer_pre_lab=factor(j_hlsv2, levels=c(1,0), labels=c("Yes","No")),
+         psy_pre_lab=factor(j_hlsv7, levels=c(1,0), labels=c("Yes","No")),
+         nhs_access_pre=factor(case_when(j_hl2gp<0 ~ 1,
+                                         j_hl2gp==0 ~2,
+                                         j_hl2hop<0 ~ 1,
+                                         j_hl2hop==0 ~2,
+                                         j_hosp==1 ~ 1,
+                                         j_hosp==2 ~ 1),levels=c(1,2), labels=c("Yes","No")))
+ 
+saveRDS(all_s, here::here('data', 'care_type', 'services_all.rds'))        
 
 
 df <- all_s %>% 
   select(treat_immune,wait_for_NHS_treat,NHS_reason_canceltreat,nhs_access, NHS_treat_con_plan_prog,NHS_Op_proc_plan,
          NHS_chemo_radio_plan,NHS_other_treat_plan,
-         nhs_presciption_acess,nhs_access_own_cancel,respite,respite_hours,chsc_access_fc_psy,chscnowcarer2,chscnowpsy2,care_hours)
+         nhs_presciption_acess,nhs_access_own_cancel,respite,
+         respite_hours,chsc_access_fc_psy,nowcarer_lab,psy_lab,
+         nowcarer_pre_lab,psy_pre_lab,nhs_access_pre,care_hours)
+
 
 
 tab<-df %>% 
@@ -141,8 +155,8 @@ tab<-df %>%
                          respite~"Can you access respite care now?",
                          nhs_access_own_cancel~"Reason for not being able to access NHS services?",
                          chsc_access_fc_psy~"Were you able to access community and social care services such as formal carers and or psychotherapist in the last 4 weeks?",
-                         chscnowcarer2~"In the last 4 weeks were supported by a formal carer?",
-                         chscnowpsy2~"In the last 4 weeks were you able to access counselling or talking therapy?")) %>% 
+                         nowcarer_lab~"In the last 4 weeks were supported by a formal carer?",
+                         psy_lab~"In the last 4 weeks were you able to access counselling or talking therapy?")) %>% 
   bold_labels() %>% 
   add_p() %>% 
   as_tibble() %>% 
@@ -155,6 +169,40 @@ tab2<-df %>%
               label=list(respite~"Can you access respite care now?")) %>% 
   bold_labels() %>% 
   add_p()
+
+##Tying to see which services they couldn't access
+# type_services<-df %>% 
+#   select(NHS_treat_con_plan_prog, care_hours) %>% 
+#   group_by(care_hours,NHS_treat_con_plan_prog) %>% 
+#   summarise(N=n()) %>% 
+#   filter(NHS_treat_con_plan_prog=="Yes") %>% 
+#   rename(NHS_treat_con_plan_prog_N=N) %>% 
+#   select(-NHS_treat_con_plan_prog) %>% 
+#   left_join(df %>% 
+#               select(NHS_Op_proc_plan, care_hours) %>% 
+#               group_by(care_hours,NHS_Op_proc_plan) %>% 
+#               summarise(N=n()) %>% 
+#               filter(NHS_Op_proc_plan=="Yes") %>% 
+#               rename(NHS_Op_proc_plan_N=N) %>% 
+#               select(-NHS_Op_proc_plan), by="care_hours") %>% 
+#   left_join(df %>% 
+#               select(NHS_chemo_radio_plan, care_hours) %>% 
+#               group_by(care_hours,NHS_chemo_radio_plan) %>% 
+#               summarise(N=n()) %>% 
+#               filter(NHS_chemo_radio_plan=="Yes") %>% 
+#               rename(NHS_chemo_radio_plan_N=N) %>% 
+#               select(-NHS_chemo_radio_plan), by="care_hours") %>% 
+#   left_join(df %>% 
+#               select(NHS_other_treat_plan, care_hours) %>% 
+#               group_by(care_hours,NHS_other_treat_plan) %>% 
+#               summarise(N=n()) %>% 
+#               filter(NHS_other_treat_plan=="Yes") %>% 
+#               rename(NHS_other_treat_plan_N=N) %>% 
+#               select(-NHS_other_treat_plan), by="care_hours") %>% 
+#   pivot_longer(!(care_hours),names_to='type_treatment', values_to='val')
+
+
+
 
 ##Saving in one doc
 
@@ -187,6 +235,7 @@ for (i in seq_along(g))
   plot(g[[i]])
 } 
 dev.off() 
+
 
 
 

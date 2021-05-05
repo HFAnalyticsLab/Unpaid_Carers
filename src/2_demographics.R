@@ -14,6 +14,7 @@ library(janitor)
 library(readxl)
 library(ggfittext)
 library(xlsx)
+library(scales)
 
 # Functions ---------------------------------------------------------------
 
@@ -67,7 +68,7 @@ dem<-variables$Name
 #Selecting Demographic variables
 
 all_dem<-all %>% 
-  select(carer, carer_pre, care_hours,contains(dem)) %>% 
+  select(carer, carer_pre, care_hours,contains(dem),betaindin_xw,betaindin_lw, psu, strata) %>% 
   mutate(sex_lab=factor(sex_cv, levels=c(1,2), labels=c("Male", "Female")),
          race=factor(case_when(racel_dv %in% (1:4)~ 1,
                         racel_dv %in% (5:8)~ 2,
@@ -96,11 +97,19 @@ all_dem<-all %>%
                                       ifelse(j_mastat_dv %in% c(6, 9), 4, NA)))),
                  level=c(1,2,3,4),
                  label=c("Single","In partnership","Separated","Widowed")),
-        child_u15=factor(case_when(j_nch14resp==0~0,
-                                     j_nch14resp==1~1,
-                                     j_nch14resp>=2~2),
-                          levels=c(0,1,2),
-                           labels=c("None", "One", "Two+")),
+        # child_u15=factor(case_when(j_nch14resp==0~0,
+        #                              j_nch14resp==1~1,
+        #                              j_nch14resp>=2~2),
+        #                   levels=c(0,1,2),
+        #                    labels=c("None", "One", "Two+")),
+        child_u16=factor(case_when(j_nchunder16==0~0,
+                                   j_nchunder16>0~1),
+                         levels=c(0,1),
+                         labels=c("None", "Atleast One")),
+        hh_child_u16=factor(case_when(j_nchild_dv==0~0,
+                                   j_nchild_dv>0~1),
+                         levels=c(0,1),
+                         labels=c("None", "Atleast One")),
         howlong_lab=factor(case_when(howlng_cv<=17 ~ 1,
                                      howlng_cv>17 & howlng_cv<35~2,
                                      howlng_cv>=35~3),levels=c(1,2,3), 
@@ -135,11 +144,14 @@ all_dem<-all %>%
                              "Caribbean", "African", "Any other Black or Black British", "Mixed", "Any other ethnic group")),
         urban_label=factor(j_urban_dv, levels=c(1,2), labels=c("Urban area", "Rural Area")))
 
+saveRDS(all_dem, here::here('data', 'care_type', 'demographics_all.rds'))
+
   
 df<-all_dem %>% 
   select(sex_lab, race, gor_dv2, age_band, employment_pre, nssec_pre, 
          marital_status, child_u15,howlong_lab,keyworkerstatus_lab,keyworksec_lab, race_plus, care_hours)
 
+saveRDS(df, here::here('data', 'care_type', 'demographics.rds'))
 
 
 vars<-list() # create empty list to add to

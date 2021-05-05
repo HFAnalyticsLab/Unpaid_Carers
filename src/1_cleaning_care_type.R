@@ -9,6 +9,7 @@
 #Load libraries
 library(tidyverse)
 library(haven)
+library(gtsummary)
 
 
 # Functions ---------------------------------------------------------------
@@ -135,7 +136,6 @@ t2<-all_lab %>%
 
 
 all %>% 
-  filter(carer=="Yes") %>% 
   select(care_hours_pre,care_hours) %>% 
   tbl_summary(by=care_hours, type=everything()~"categorical") %>% 
   add_p() %>% 
