@@ -6,7 +6,7 @@
 
 The impact of unpaid caring is closely related to the intensity of the care provision. Evidence suggests that unpaid carers were affected negatively by the COVID-19 pandemic but previous studies have not made a distinction between different caring types. This analysis explores who the unpaid carers are during the second half of the pandemic, their state of health and how they have been able to manage their own health through accesing healthcare services. It will make a disnticion between different caring types.
 
-Currently  the code in this repo provides preliminary analysis and findings relevant to the COVID-19 Impact Inquiry. Analysis presented are mainly descriptive. It can be found here: https://rpubs.com/annealarilla/765463
+Currently  the code in this repo provides preliminary analysis and findings relevant to the COVID-19 Impact Inquiry. Analysis presented are mainly descriptive. Results for the COVID-19 Impact Inquiry can be found here: https://rpubs.com/annealarilla/765463
 
 ## Data source
 
