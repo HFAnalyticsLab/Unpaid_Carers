@@ -1,3 +1,10 @@
+# 
+# Project: Unpaid Carers during the pandemic
+# Purpose: Cleaning the access to services variables
+# Author: Anne Alarilla
+# Date: 19/04/2021
+# 
+
 #Load libraries
 library(tidyverse)
 library(haven)
@@ -10,40 +17,11 @@ library(scales)
 
 # Functions ---------------------------------------------------------------
 
-
 `%notin%` <- Negate(`%in%`)
-
-replace_with_na_all_2 <- function(df, formule) {
-  df[rlang::as_function(formule)(df)] <- NA
-  df
-}
-
-d_graph <-  function(data,var.x=sex_lab){
-  aaa <- ggplot2::enquo(var.x)
-  #bbb <- ggplot2::enquo(var.y)
-  plot <-  data %>%
-    group_by(care_hours,!!aaa) %>%
-    summarise(N=n()) %>% 
-    filter(!is.na(!!aaa)) %>% 
-    mutate(freq = N/sum(N)) %>% 
-    drop_na() %>% 
-    ggplot(., mapping=aes(x=!!aaa, y=freq, label=percent(freq)))+
-    geom_col(aes(fill=!!aaa),show.legend=FALSE)+
-    geom_bar_text()+
-    coord_flip()+
-    scale_x_discrete(labels = label_wrap(4))+
-    facet_grid(cols=vars(care_hours))+
-    theme(legend.position="none")+
-    theme_bw()
-  plot
-}
 
 # Load data ---------------------------------------------------------------
 
 all<- readRDS(here::here('data','care_type','caring_pandemic_care_type.rds'))
-
-all<-all%>% 
-  replace_with_na_all_2(df=.,formule = ~.x <0) 
 
 
 variables <- read_excel(here::here("Variables.xlsx"))
@@ -57,7 +35,7 @@ variables <- variables %>%
 s<-variables$Name
 
 all_s<-all %>% 
-  select(carer, carer_pre, care_hours,contains(s),betaindin_xw,betaindin_lw, psu, strata) %>% 
+  select(pidp,carer, carer_pre, care_hours,contains(s),probit_lasso_wgt_t25, psu, strata) %>% 
   rename(treat_OT=hcond_treat1, 
          med_immune=hcond_treat2, 
          chemo_cancer=hcond_treat3,
@@ -72,9 +50,9 @@ all_s<-all %>%
 
 
 all_s<- all_s %>% ##Check that these are for those who needs it##
-  mutate(sum_treat_immune=rowSums(all_s[ ,c(4:8)], na.rm=TRUE),
+  mutate(sum_treat_immune=rowSums(all_s[ ,c(5:9)], na.rm=TRUE),
          treat_immune=ifelse(sum_treat_immune>0,"Yes","No"),
-         sum_NHS_treat = rowSums(all_s[ ,c(10:13)], na.rm=TRUE), 
+         sum_NHS_treat = rowSums(all_s[ ,c(11:14)], na.rm=TRUE), 
          wait_for_NHS_treat= ifelse(sum_NHS_treat>0, "Yes", "No"),
          NHS_treat_con_plan_prog = factor(NHS_treat_con_plan_prog, levels=c(1,0), labels=c("Yes","No")),
          NHS_Op_proc_plan= factor(NHS_Op_proc_plan, levels=c(1,0), labels=c("Yes","No")),                                
@@ -136,106 +114,3 @@ all_s<- all_s %>% ##Check that these are for those who needs it##
                                          j_hosp==2 ~ 1),levels=c(1,2), labels=c("Yes","No")))
  
 saveRDS(all_s, here::here('data', 'care_type', 'services_all.rds'))        
-
-
-df <- all_s %>% 
-  select(treat_immune,wait_for_NHS_treat,NHS_reason_canceltreat,nhs_access, NHS_treat_con_plan_prog,NHS_Op_proc_plan,
-         NHS_chemo_radio_plan,NHS_other_treat_plan,
-         nhs_presciption_acess,nhs_access_own_cancel,respite,
-         respite_hours,chsc_access_fc_psy,nowcarer_lab,psy_lab,
-         nowcarer_pre_lab,psy_pre_lab,nhs_access_pre,care_hours)
-
-
-
-tab<-df %>% 
-  tbl_summary(by=care_hours, type=everything()~"categorical", percent=("column"), 
-              label=list(wait_for_NHS_treat~"Since 1st Jan 2020, have you been waiting for NHS treatment?",
-                         NHS_reason_canceltreat~"If waiting for NHS treatment, has treatment been changed in any way?",
-                         nhs_access~"Were you able to access services such as the gp, 111, inpatient and/or outpatients?",
-                         respite~"Can you access respite care now?",
-                         nhs_access_own_cancel~"Reason for not being able to access NHS services?",
-                         chsc_access_fc_psy~"Were you able to access community and social care services such as formal carers and or psychotherapist in the last 4 weeks?",
-                         nowcarer_lab~"In the last 4 weeks were supported by a formal carer?",
-                         psy_lab~"In the last 4 weeks were you able to access counselling or talking therapy?")) %>% 
-  bold_labels() %>% 
-  add_p() %>% 
-  as_tibble() %>% 
-  mutate_if(is.character, ~replace(., is.na(.), ""))
-
-
-tab2<-df %>% 
-  select(care_hours, respite) %>% 
-  tbl_summary(by=care_hours, type=everything()~"categorical", percent=("column"), 
-              label=list(respite~"Can you access respite care now?")) %>% 
-  bold_labels() %>% 
-  add_p()
-
-##Tying to see which services they couldn't access
-# type_services<-df %>% 
-#   select(NHS_treat_con_plan_prog, care_hours) %>% 
-#   group_by(care_hours,NHS_treat_con_plan_prog) %>% 
-#   summarise(N=n()) %>% 
-#   filter(NHS_treat_con_plan_prog=="Yes") %>% 
-#   rename(NHS_treat_con_plan_prog_N=N) %>% 
-#   select(-NHS_treat_con_plan_prog) %>% 
-#   left_join(df %>% 
-#               select(NHS_Op_proc_plan, care_hours) %>% 
-#               group_by(care_hours,NHS_Op_proc_plan) %>% 
-#               summarise(N=n()) %>% 
-#               filter(NHS_Op_proc_plan=="Yes") %>% 
-#               rename(NHS_Op_proc_plan_N=N) %>% 
-#               select(-NHS_Op_proc_plan), by="care_hours") %>% 
-#   left_join(df %>% 
-#               select(NHS_chemo_radio_plan, care_hours) %>% 
-#               group_by(care_hours,NHS_chemo_radio_plan) %>% 
-#               summarise(N=n()) %>% 
-#               filter(NHS_chemo_radio_plan=="Yes") %>% 
-#               rename(NHS_chemo_radio_plan_N=N) %>% 
-#               select(-NHS_chemo_radio_plan), by="care_hours") %>% 
-#   left_join(df %>% 
-#               select(NHS_other_treat_plan, care_hours) %>% 
-#               group_by(care_hours,NHS_other_treat_plan) %>% 
-#               summarise(N=n()) %>% 
-#               filter(NHS_other_treat_plan=="Yes") %>% 
-#               rename(NHS_other_treat_plan_N=N) %>% 
-#               select(-NHS_other_treat_plan), by="care_hours") %>% 
-#   pivot_longer(!(care_hours),names_to='type_treatment', values_to='val')
-
-
-
-
-##Saving in one doc
-
-wb <-xlsx::loadWorkbook( here::here('outputs', 'CareVariables.xlsx'))
-
-sheet = xlsx::createSheet(wb, "Access to services")
-
-xlsx::addDataFrame(as.data.frame(tab), sheet=sheet, startColumn=1, row.names=FALSE)
-
-saveWorkbook(wb, here::here('outputs', 'CareVariables.xlsx'))
-
-
-
-vars<-list() # create empty list to add to
-for (j in seq_along(df)) {
-  
-  vars[[j]] <- as.name(colnames(df)[j])
-}
-
-g<-lapply(vars[1:length(vars)-1],d_graph,data=df)
-
-
-somePDFPath = here::here('outputs', 'Access_to_services.pdf')
-pdf(file=somePDFPath)  
-
-
-i=1
-for (i in seq_along(g))   
-{   
-  plot(g[[i]])
-} 
-dev.off() 
-
-
-
-

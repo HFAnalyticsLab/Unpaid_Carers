@@ -1,3 +1,12 @@
+# 
+# Project: Unpaid Carers during the pandemic
+# Purpose: Cleaning the Health variables
+# Author: Anne Alarilla
+# Date: 19/04/2021
+# 
+
+
+
 #Load libraries
 library(tidyverse)
 library(haven)
@@ -36,33 +45,9 @@ fix_NA<-function(x){
   x
 }
 
-
-d_graph <-  function(data,var.x=sex_lab){
-  aaa <- ggplot2::enquo(var.x)
-  #bbb <- ggplot2::enquo(var.y)
-  plot <-  data %>%
-    group_by(care_hours,!!aaa) %>%
-    summarise(N=n()) %>% 
-    filter(!is.na(!!aaa)) %>% 
-    mutate(freq = N/sum(N)) %>% 
-    drop_na() %>% 
-    ggplot(., mapping=aes(x=!!aaa, y=freq, label=percent(freq)))+
-    geom_col(aes(fill=!!aaa),show.legend=FALSE)+
-    geom_bar_text()+
-    #coord_flip()+
-    scale_x_discrete(labels = label_wrap(4))+
-    facet_grid(cols=vars(care_hours))+
-    theme(legend.position="none")+
-    theme_bw()
-  plot
-}
 # Loading data and Variable list ------------------------------------------------------------
 
 all<- readRDS(here::here('data','care_type','caring_pandemic_care_type.rds'))
-
-all<-all%>% 
-  replace_with_na_all_2(df=.,formule = ~.x <0) 
-
 
 variables <- read_excel(here::here("Variables.xlsx"))
 
@@ -76,7 +61,7 @@ h<-variables$Name
 
 
 all_h<-all %>% 
-  select(carer, carer_pre, care_hours,contains(h),betaindin_xw,betaindin_lw, psu, strata) %>% 
+  select(pidp, carer, carer_pre, care_hours,contains(h),probit_lasso_wgt_t25, psu, strata) %>% 
   rename(Asthma=ff_hcond1, 
          Arthritis=ff_hcond2, 
          Congestive_heart_failure=ff_hcond3,
@@ -113,26 +98,6 @@ all_h<-all_h %>%
 
 saveRDS(all_h, here::here('data', 'care_type', 'health_all.rds'))
 
-
-all_h %>% 
-  select(GHQ_diff, care_hours) %>% 
-  # mutate(GHQ_diff=as.factor(GHQ_diff)) %>%
-  tbl_summary(by=care_hours, statistic = list(all_continuous() ~ "{mean} ({sd})")) %>% 
-  add_p()
-
-try <- all_h %>% 
-  select(GHQ_diff, care_hours) %>%  
-  anova_test(GHQ_diff ~ care_hours)
-try
-
-# Compute the analysis of variance
-try2 <- aov(GHQ_diff ~ care_hours, data = all_h)
-# Summary of the analysis
-summary(try2)
-
-
-##regression, with the care hours, GHQ pre and GHQ during as dependent variable 
-
 top_conds<-all_h %>% 
   select(Asthma:hcondnew_cv96,care_hours) %>% 
   mutate(Asthma2=ifelse(Asthma==1|hcondnew_cv1==1,1,0),
@@ -165,61 +130,8 @@ top_conds<-all_h %>%
   ungroup() %>% 
   select(-val) %>% 
   pivot_wider(names_from ="care_hours", values_from ="N") 
+
 ##Save as top health conditions 
-
-
-all_h[,6:50] <- lapply(all_h[,6:50], fix_yes)
-all_h[,6:50] <- lapply(all_h[,6:50], fix_no)
-all_h[,6:50] <- lapply(all_h[,6:50], fix_NA)
-
-
-# Graphs ------------------------------------------------------------------
-
-df<-all_h %>% 
-  select(mltc, GHQ_cv, GHQ_pre, Overweight, care_hours) 
-  
-
-vars<-list() # create empty list to add to
-for (j in seq_along(df)) {
-  
-  vars[[j]] <- as.name(colnames(df)[j])
-}
-
-g<-lapply(vars[1:length(vars)-1],d_graph,data=df)
-
-
-tab<-df %>% 
-  tbl_summary(by=care_hours, type=everything()~"categorical", percent=("column")) %>% 
-  bold_labels() %>% 
-  add_p() %>% 
-  as_tibble() %>% 
-  mutate_if(is.character, ~replace(., is.na(.), ""))
-
-
-
-##Saving in one doc
-
-wb <-xlsx::loadWorkbook( here::here('outputs', 'CareVariables.xlsx'))
-
-sheet = xlsx::createSheet(wb, "Health")
-
-xlsx::addDataFrame(as.data.frame(tab), sheet=sheet, startColumn=1, row.names=FALSE)
-
-sheet = xlsx::createSheet(wb, "Health Conditions")
-
-xlsx::addDataFrame(as.data.frame(top_conds), sheet=sheet, startColumn=1, row.names=FALSE)
-
-saveWorkbook(wb, here::here('outputs', 'CareVariables.xlsx'))
-
-
-##Saving graph
-somePDFPath = here::here('outputs', 'Health.pdf')
-pdf(file=somePDFPath)  
-
-
-i=1
-for (i in seq_along(g))   
-{   
-  plot(g[[i]])
-} 
-dev.off() 
+all_h[,7:51] <- lapply(all_h[,7:51], fix_yes)
+all_h[,7:51] <- lapply(all_h[,7:51], fix_no)
+all_h[,7:51] <- lapply(all_h[,7:51], fix_NA)

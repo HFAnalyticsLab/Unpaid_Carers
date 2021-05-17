@@ -94,25 +94,18 @@ all_wide<-covid_long %>%
   mutate(covid=ifelse(is.na(covid),-6,covid)) %>% 
   select(-c(w7_cv, w6_cv)) %>% 
   pivot_wider(names_from ="var", values_from ="covid") %>% 
-  ##Need to check if we can do this 
-  mutate(betaindin_xw=ifelse(is.na(betaindin_xw), betaindin_xw_t,betaindin_xw)) %>%  
   left_join(wave10, by=c("pidp")) %>% 
   ##Na if did not take part in wave 10  
   mutate_if(is.numeric, ~replace(., is.na(.), -10))
   
 
 
-# #combining pre and covid waves
-# all_wide2<-covid_long %>%   
-#   #Replacing the NAs to -6, NA because did not take part in both surveys (just one) or did not take part in telephone only variables
-#   mutate(covid=ifelse(is.na(covid),-6,covid)) %>% 
-#   select(-c(w7_cv, w6_cv)) %>% 
-#   pivot_wider(names_from ="var", values_from ="covid") %>% 
-#   ##Need to check if we can do this 
-#   mutate(betaindin_xw=ifelse(is.na(betaindin_xw), betaindin_xw_t,betaindin_xw)) %>%  
-#   full_join(wave10, by=c("pidp")) %>% 
-#   ##Na if did not take part in wave 10  
-#   mutate_if(is.numeric, ~replace(., is.na(.), -10))
+#Adding the new weightings
+
+weights <- read_dta(file=here::here('data','stata','Anne_analysis_weight.dta'))
+
+all_wide<-all_wide %>% 
+  full_join(weights, by="pidp")
 
 
 saveRDS(all_wide, here::here('data', 'care_type', 'caring_pandemic.rds'))
