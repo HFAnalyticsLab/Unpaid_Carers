@@ -1,6 +1,6 @@
 # 
 # Project: Unpaid Carers during the pandemic
-# Purpose: Findings for the COVID-19 Impact Inquiry
+# Purpose: Preliminary Analysis
 # Author: Anne Alarilla
 # Date: 17/05/2021
 # 
@@ -45,11 +45,11 @@ assign(deparse(substitute(df)),w.env$df, envir=.GlobalEnv)
 #Set up for excel output
 #Combining the data set 
 #Survey design set up
-#Slide 1: Sankey plot
-#Slide 2: Women providing unpaid care and childcare
-#Slide 3: Ethnicity and caring
-#Slide 4: Caring within or outside household
-#Slide 5: Caring outcomes 
+#Sankey plot: Change in unpaid caring
+#Women providing unpaid care and childcare
+#Ethnicity and caring
+#Caring within or outside household
+#Caring outcomes 
 
 
 # Set up for excel output -------------------------------------------------
@@ -93,7 +93,7 @@ uos_design<-svydesign(id= ~psu, strata= ~strata, survey.lonely.psu="adjust",
 options(survey.lonely.psu="adjust")
 
 
-# Slide 1: Sankey plot -------------------------------------------------------------
+#Sankey plot: Change in unpaid caring -------------------------------------------------------------
 
 ##Descriptive
 
@@ -179,7 +179,7 @@ sheet = createSheet(wb, "Care Status")
 addDataFrame(as.data.frame(t1), sheet=sheet, startColumn=1, row.names=FALSE)
 
 
-# Slide 2: Women providing unpaid care and childcare ---------------------------------------------------------
+# Women providing unpaid care and childcare ---------------------------------------------------------
 
 ##Breakdown of Men and Women caring and childcare
 
@@ -345,7 +345,7 @@ sheet = createSheet(wb, "Sex and Childcare")
 addDataFrame(as.data.frame(t3), sheet=sheet, startColumn=1, row.names=FALSE)
 
 
-# Slide 3: Ethnicity and caring -----------------------------------------------------------------
+# Ethnicity and caring -----------------------------------------------------------------
 
 ##Descriptive 
 t4<-uos_design %>% 
@@ -398,7 +398,7 @@ sheet = createSheet(wb, "Ethnicity and Care status")
 addDataFrame(as.data.frame(t4), sheet=sheet, startColumn=1, row.names=FALSE)
 
 
-# Slide 4: Caring within or outside household -----------------------------------------------------------------
+# Caring within or outside household -----------------------------------------------------------------
 
 ##Removing non carers in the sample
 w_all_2<-final %>% 
@@ -461,7 +461,7 @@ sheet = createSheet(wb, "Care location and Care status")
 addDataFrame(as.data.frame(t5), sheet=sheet, startColumn=1, row.names=FALSE)
 
 
-# Slide 5: Caring outcomes  -----------------------------------------------------------------
+# Caring outcomes  -----------------------------------------------------------------
 
 #Descriptive
 t6<-uos_design %>% 
@@ -535,5 +535,5 @@ addDataFrame(as.data.frame(t6), sheet=sheet, startColumn=1, row.names=FALSE)
 # Closing excel sheet -----------------------------------------------------
 
 
-saveWorkbook(wb, here::here('outputs', 'CV_19_Impact_Inquiry2.xlsx'))
+saveWorkbook(wb, here::here('outputs', 'Unpaid_Carer2.xlsx'))
 
