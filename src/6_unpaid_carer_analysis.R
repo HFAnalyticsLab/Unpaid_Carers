@@ -62,11 +62,12 @@ wb = createWorkbook()
 
 ##Demographics
 all_dem <- all_dem %>% 
-  mutate(sandwich=factor(case_when(hh_child_u16 =="Atleast One" & age < 71 ~ 1,
-                                   (hh_child_u16== "None" | age >= 71) ~ 2),levels=c(1,2), 
-                         labels=c("1+ child under 16 in the household","No child under 16 in the household"))) %>% 
-  unite("Metric",c(sex_lab, sandwich), sep= " ", remove=FALSE) %>% 
-  unite("Metric2", c(care_hours, sandwich), sep=" ", remove=FALSE)
+  mutate(resp_child=factor(case_when(child_u15 %in% c("One", "Two+")  ~ 1,
+                                     child_u15== "None" ~ 2),levels=c(1,2), 
+                           labels=c("1+ child under 15 responsible for","No child under 15 responsible for")),
+         hh_child=factor(case_when(hh_child_u16 =="Atleast One" ~ 1,
+                                   hh_child_u16 == "None" ~ 2),levels=c(1,2), 
+                         labels=c("1+ child under 16 in the household","No child under 16 in the household")))
 
 ##Health and access to services 
 all_h_s<- all_h %>% 
@@ -79,7 +80,7 @@ all_h_s<- all_h %>%
 final<-all %>% 
   select(pidp, carer, carer_pre,care_hours_pre,care_loc_cv,care_loc_change,care_hours, probit_lasso_wgt_t25, psu, strata) %>% 
   left_join(all_dem %>%  
-    select(race_plus, sex_lab,age,hh_child_u16, sandwich, Metric, Metric2, pidp)) %>% 
+    select(race_plus, sex_lab,age,hh_child_u16, hh_child,resp_child,child_u15,pidp)) %>% 
   left_join(all_h_s %>% 
     select(GHQ_cv,mltc,wait_for_NHS_treat, mltc_short, pidp)) 
 
@@ -98,6 +99,11 @@ options(survey.lonely.psu="adjust")
 
 uos_design %>% 
   tbl_svysummary(include = c(care_hours_pre,care_hours),
+                 type=everything()~"categorical") %>% 
+  bold_labels() 
+
+uos_design %>% 
+  tbl_svysummary(by="carer",include = c(carer,carer_pre),
                  type=everything()~"categorical") %>% 
   bold_labels() 
 
@@ -180,11 +186,12 @@ addDataFrame(as.data.frame(t1), sheet=sheet, startColumn=1, row.names=FALSE)
 ##Descriptive 
 
 t2<-uos_design %>% 
-  tbl_svysummary(by="sex_lab",include = c(carer, care_hours, sex_lab, sandwich),
+  tbl_svysummary(by="sex_lab",include = c(carer, care_hours, sex_lab, hh_child, resp_child),
                  type=everything()~"categorical", 
                  label= list(carer~"If unpaid carer (Nov 2020/Jan 2021)?",
                              care_hours~"Type of carer?",
-                             sandwich~"Number of children in household?")) %>% 
+                             hh_child~"Number of children in household?",
+                             resp_child~"Number of children responsible for?")) %>% 
   add_p() %>% 
   as.tibble() %>% 
   mutate_if(is.character, ~replace(., is.na(.), ""))
@@ -192,19 +199,20 @@ t2<-uos_design %>%
 clean_names(t2)
 
 uos_design %>% 
-  tbl_svysummary(by = "care_hours", include = c(care_hours, sex_lab, sandwich, Metric),
+  tbl_svysummary(by = "care_hours", include = c(care_hours, sex_lab, hh_child,resp_child),
                  label=list(sex_lab~"Gender",
-                            sandwich~"Number of children in household?",
-                            Metric~"Type of caring and Gender"))%>% 
+                            hh_child~"Number of children in household?",
+                            resp_child~"Number of children responsible for?"))%>% 
   add_p() %>% 
   bold_labels()
 
 
 fem<-subset(uos_design, sex_lab=="Female") %>% 
-tbl_svysummary(by="care_hours",include = c(care_hours, sandwich),
+tbl_svysummary(by="care_hours",include = c(care_hours, hh_child,resp_child),
                  type=everything()~"categorical", 
                  label= list(care_hours~"Type of carer?",
-                             sandwich~"Number of children in household?")) %>% 
+                             hh_child~"Number of children in household?",
+                             resp_child~"Number of children responsible for?")) %>% 
   add_p() %>% 
   bold_labels() %>% 
   as.tibble() %>% 
@@ -213,10 +221,11 @@ tbl_svysummary(by="care_hours",include = c(care_hours, sandwich),
 
 
 male<-subset(uos_design, sex_lab=="Male") %>% 
-  tbl_svysummary(by="care_hours",include = c(care_hours, sandwich),
+  tbl_svysummary(by="care_hours",include = c(care_hours, hh_child,resp_child),
                  type=everything()~"categorical", 
                  label= list(care_hours~"Type of carer?",
-                             sandwich~"Number of children in household?")) %>% 
+                             hh_child~"Number of children in household?",
+                             resp_child~"Number of children responsible for?")) %>% 
   add_p() %>% 
   bold_labels() %>% 
   as.tibble() %>% 
@@ -228,7 +237,7 @@ t3<-cbind(fem,male)
 clean_names(t3)
 
 #Graph of sex and childcare by caring status 
-tab_s<-svytable(~sex_lab+ sandwich +care_hours, design=uos_design) %>% 
+tab_s<-svytable(~sex_lab+ hh_child +care_hours, design=uos_design) %>% 
   as.data.frame() %>% 
   # group_by(care_hours) %>% 
   # mutate(sum_care=sum(Freq), prop_care=Freq/sum_care,) %>% 
@@ -237,14 +246,13 @@ tab_s<-svytable(~sex_lab+ sandwich +care_hours, design=uos_design) %>%
   mutate(sum_sex=sum(Freq),prop_sex=Freq/sum_sex) %>% 
   ungroup()
 
-
 tab_s %>% 
   mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care",
                        care_hours=="High Level Caring"~"Providing 20+ hours of care",
                        care_hours=="No caring"~"Not providing care")) %>% 
   ggplot(., aes(x = sex_lab, y = prop_sex*100)) +
-  # geom_col(aes(color = sandwich, fill = sandwich), position = position_dodge(0.8), width = 0.7)+
-  geom_bar(aes(color = sandwich, fill = sandwich), position ="stack", stat="identity")+
+  # geom_col(aes(color = hh_child, fill = hh_child), position = position_dodge(0.8), width = 0.7)+
+  geom_bar(aes(color = hh_child, fill = hh_child), position ="stack", stat="identity")+
   theme_THF()+
   # scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20))+
   facet_wrap(~lab)+
@@ -259,6 +267,73 @@ tab_s %>%
 #Saving graph
 ggsave(here::here('outputs','care.png'),dpi=300,
        width = 10, height = 6.5) 
+
+# tab_sx<-svytable(~sex_lab+ resp_child +care_hours, design=uos_design) %>% 
+#   as.data.frame() %>% 
+#   group_by(care_hours) %>%
+#   mutate(sum_care=sum(Freq)) %>%
+#   ungroup() %>%
+#   group_by(care_hours,sex_lab) %>% 
+#   mutate(sum_sex=sum(Freq),prop_sex=sum_sex/sum_care, prop_child=Freq/sum_sex) %>% 
+#   ungroup() 
+# 
+# tab_sx %>% 
+#   mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care",
+#                        care_hours=="High Level Caring"~"Providing 20+ hours of care",
+#                        care_hours=="No caring"~"Not providing care")) %>% 
+#   ggplot(., aes(x = sex_lab, y = prop_sex))+
+#   # geom_col(aes(color = resp_child, fill = resp_child), position = position_dodge(0.8), width = 0.7)+
+#   geom_bar(aes(color = resp_child, fill = resp_child), position="stack", stat="identity")+
+#   theme_THF()+
+#   # scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20))+
+#   facet_wrap(~lab)+
+#   scale_fill_THF()+
+#   scale_colour_THF()+
+#   labs(x= "", y="", title="")+
+#   theme(plot.title = element_text(size=14),
+#         legend.text=element_text(size=14), legend.position="bottom", 
+#         axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14),
+#         strip.text=element_text(size=14))
+# 
+
+tab_sex_care<-svytable(~sex_lab+care_hours+resp_child, design=uos_design) %>% 
+  as.data.frame() %>% 
+  group_by(sex_lab,care_hours) %>% 
+  mutate(sum_sex_care=sum(Freq)) %>% 
+  ungroup() %>% 
+  group_by(sex_lab) %>% 
+  mutate(sum_sex=sum(Freq)) %>% 
+  group_by(resp_child,sex_lab) %>% 
+  mutate(sum_child_sex=sum(Freq)) %>% 
+  ungroup() %>% 
+  mutate(prop_care_sex=sum_sex_care/sum_sex, prop_child_sex_care=Freq/sum_sex)
+
+tab_sex_care
+
+
+tab_sex_care %>% 
+  mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care",
+                       care_hours=="High Level Caring"~"Providing 20+ hours of care",
+                       care_hours=="No caring"~"Not providing care")) %>% 
+  ggplot(., aes(x = sex_lab, y = prop_child_sex_care*100))+
+  # geom_col(aes(color = resp_child, fill = resp_child), position = position_dodge(0.8), width = 0.7)+
+  geom_bar(aes(color = resp_child, fill = resp_child), position="stack", stat="identity")+
+  theme_THF()+
+  scale_y_continuous(limits = c(0,80), breaks = seq(0, 80, by = 10))+
+  facet_wrap(~lab)+
+  scale_fill_THF()+
+  scale_colour_THF()+
+  labs(x= "", y="", title="")+
+  theme(plot.title = element_text(size=14),
+        legend.text=element_text(size=14), legend.position="bottom", 
+        axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14),
+        strip.text=element_text(size=14))
+
+#Saving graph
+ggsave(here::here('outputs','care2.png'),dpi=300,
+       width = 10, height = 6.5) 
+
+
 
 #Saving data to excel sheet
 sheet = createSheet(wb, "Sex")
@@ -460,5 +535,5 @@ addDataFrame(as.data.frame(t6), sheet=sheet, startColumn=1, row.names=FALSE)
 # Closing excel sheet -----------------------------------------------------
 
 
-saveWorkbook(wb, here::here('outputs', 'CV_19_Impact_Inquiry.xlsx'))
+saveWorkbook(wb, here::here('outputs', 'CV_19_Impact_Inquiry2.xlsx'))
 
