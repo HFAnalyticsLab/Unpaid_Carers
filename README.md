@@ -10,7 +10,7 @@ Currently  the code in this repo provides preliminary analysis. Analysis present
 
 ## Data source
 
-Source: Understanding Society Data set, [Wave 10 (2018/19)](https://beta.ukdataservice.ac.uk/datacatalogue/series/series?id=2000053#!/access-data) and COVID-19 sub study Waves [6 (November 2020) and 7 (January 2021)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=8644)
+Source: Understanding Society Data set, [Wave 10 (2018/19)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=6614) and COVID-19 sub study Waves [6 (November 2020) and 7 (January 2021)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=8644)
 
 
 ## How does it work?
