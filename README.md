@@ -6,7 +6,7 @@
 
 The impact of unpaid caring is closely related to the intensity of the care provision. Evidence suggests that unpaid carers were affected negatively by the COVID-19 pandemic but previous studies have not made a distinction between different caring types. This analysis explores who the unpaid carers are during the second half of the pandemic, their state of health and how they have been able to manage their own health through accesing healthcare services. It will make a disnticion between different caring types.
 
-Currently  the code in this repo provides preliminary analysis and findings relevant to the COVID-19 Impact Inquiry. Analysis presented are mainly descriptive. 
+Currently  the code in this repo provides preliminary analysis. Analysis presented are mainly descriptive. 
 
 ## Data source
 
@@ -39,7 +39,7 @@ The 'src' folder contains
 * [3_health.R](https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/3_health.R) - Clean and save health variables
 * [4_access_to_services.R](https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/4_access_to_services.R) -  Clean and save access to services variables
 * [5_covid](https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/5_covid.R) - Clean, COVID-19 related variables
-* [6_COVID_19_Impact_Inquiry]( https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/6_COVID_19_Impact_Inquiry.R)
+* [6_unpaid_carer_analysis]( https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/src/6_unpaid_carer_analysis.R)
 
 List of variables used can be found in the [variables excel sheet](https://github.com/HFAnalyticsLab/Unpaid_Carers/blob/main/variables.xlsx) 
 
