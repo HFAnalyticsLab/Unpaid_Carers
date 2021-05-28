@@ -21,6 +21,7 @@ library(survey)
 library(ggtext)
 library(plotly)
 library(xlsx)
+library(gtsummary)
 
 
 ##Load Data 
@@ -139,36 +140,54 @@ nodes<- nodes %>%
   mutate(ColourGroup=case_when(name=="No caring" ~ "#dd0031",
                                name== "Low Level Caring" ~ "#53a9cd",
                                name== "High Level Caring" ~ "#744284"))
+# 
+# fig <- plot_ly(
+#   type = "sankey",
+#   orientation = "h",
+#   
+#   node = list(
+#     label = nodes$name,
+#     color = nodes$ColourGroup,
+#     pad = 15,
+#     thickness = 20,
+#     line = list(
+#       color = "black",
+#       width = 0.5
+#     )
+#   ),
+#   
+#   link = list(
+#     source = sankey_plot_id$IDin,
+#     target = sankey_plot_id$IDout,
+#     value =  sankey_plot_id$Freq
+#   )
+# )
+# fig <- fig %>% layout(
+#   title = "Change in unpaid caring during pandemic",
+#   font = list(
+#     size = 12
+#   )
+# )
+# 
+# fig
 
-fig <- plot_ly(
-  type = "sankey",
-  orientation = "h",
-  
-  node = list(
-    label = nodes$name,
-    color = nodes$ColourGroup,
-    pad = 15,
-    thickness = 20,
-    line = list(
-      color = "black",
-      width = 0.5
-    )
-  ),
-  
-  link = list(
-    source = sankey_plot_id$IDin,
-    target = sankey_plot_id$IDout,
-    value =  sankey_plot_id$Freq
-  )
-)
-fig <- fig %>% layout(
-  title = "Change in unpaid caring during pandemic",
-  font = list(
-    size = 12
-  )
-)
 
-fig
+node_colour<-'d3.scaleOrdinal() .domain(["THF_red","THF_50pct_light_blue","THF_1_purple"])
+              .range(["#dd0031","#53a9cd","#744284"])'
+
+nodes<- nodes %>% 
+  mutate(ColourGroup=case_when(name=="No caring" ~ "THF_red",
+                               name== "Low Level Caring" ~ "THF_50pct_light_blue",
+                               name== "High Level Caring" ~ "THF_1_purple"))
+
+
+sankey<-sankeyNetwork(Links = sankey_plot_id, Nodes = nodes, 
+                      Source = "IDin", Target = "IDout", 
+                      Value = "n", NodeID = "name", sinksRight = FALSE, fontSize = 14, colourScale = node_colour,  NodeGroup = "ColourGroup", width=700, height=500)
+
+sankey <- htmlwidgets::prependContent(sankey, htmltools::tags$h1("Change in unpaid caring during the pandemic"))
+
+sankey
 
 
 #Saving data to excel sheet
