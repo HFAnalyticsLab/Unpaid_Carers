@@ -111,13 +111,17 @@ uos_design %>%
 
 ##Sankey plot 
 t1<-svytable(~care_hours_pre+care_hours, design=uos_design) %>% 
-  as.data.frame()
+  as.data.frame() %>% 
+  mutate(care_hours_pre=factor(care_hours_pre, levels=c("High Level Caring", "Low Level Caring", "No caring"), 
+                               labels=c("Providing 20+ hours of care","Providing <20 hours of care","Not providing care")),
+          care_hours=factor(care_hours, levels=c("High Level Caring", "Low Level Caring", "No caring"), 
+                             labels=c("Providing 20+ hours of care","Providing <20 hours of care","Not providing care")))
 
 sankey_plot_data<-t1 %>% 
   mutate(In=case_when(care_hours_pre != "" ~ paste0(care_hours_pre, sep='_1')),
          Out=case_when(care_hours != "" ~ paste0(care_hours, sep='_2'))) %>% 
   drop_na() %>% 
-  select(In, Out, Freq)
+  select(In, Out, Freq) 
   
 
 nodes<- sankey_plot_data %>% 
@@ -126,6 +130,7 @@ nodes<- sankey_plot_data %>%
   select(-1) %>% 
   distinct() %>% 
   mutate(name=str_sub(name_match, end=-3))
+
 
 nodes<-data.frame(nodes)
 
@@ -137,57 +142,41 @@ sankey_plot_id<-data.frame(sankey_plot_id)
 
 
 nodes<- nodes %>% 
-  mutate(ColourGroup=case_when(name=="No caring" ~ "#dd0031",
-                               name== "Low Level Caring" ~ "#53a9cd",
-                               name== "High Level Caring" ~ "#744284"))
-# 
-# fig <- plot_ly(
-#   type = "sankey",
-#   orientation = "h",
-#   
-#   node = list(
-#     label = nodes$name,
-#     color = nodes$ColourGroup,
-#     pad = 15,
-#     thickness = 20,
-#     line = list(
-#       color = "black",
-#       width = 0.5
-#     )
-#   ),
-#   
-#   link = list(
-#     source = sankey_plot_id$IDin,
-#     target = sankey_plot_id$IDout,
-#     value =  sankey_plot_id$Freq
-#   )
-# )
-# fig <- fig %>% layout(
-#   title = "Change in unpaid caring during pandemic",
-#   font = list(
-#     size = 12
-#   )
-# )
-# 
-# fig
+  mutate(ColourGroup=case_when(name=="Not providing care" ~ "#dd0031",
+                               name== "Providing <20 hours of care" ~ "#53a9cd",
+                               name== "Providing 20+ hours of care" ~ "#744284"))
 
+fig <- plot_ly(
+  type = "sankey",
+  arrangement = "snap",
+  orientation = "h",
 
-node_colour<-'d3.scaleOrdinal() .domain(["THF_red","THF_50pct_light_blue","THF_1_purple"])
-              .range(["#dd0031","#53a9cd","#744284"])'
+  node = list(
+    label = nodes$name,
+    color = nodes$ColourGroup,
+    pad = 15,
+    thickness = 20,
+    line = list(
+      color = "black",
+      width = 0.5
+    )
+  ),
 
-nodes<- nodes %>% 
-  mutate(ColourGroup=case_when(name=="No caring" ~ "THF_red",
-                               name== "Low Level Caring" ~ "THF_50pct_light_blue",
-                               name== "High Level Caring" ~ "THF_1_purple"))
+  link = list(
+    source = sankey_plot_id$IDin,
+    target = sankey_plot_id$IDout,
+    value =  sankey_plot_id$Freq
+  )
+)
+fig <- fig %>% layout(
+  title = "",
+  font = list(
+    size = 12
+  )
+)
 
+fig
 
-sankey<-sankeyNetwork(Links = sankey_plot_id, Nodes = nodes, 
-                      Source = "IDin", Target = "IDout", 
-                      Value = "n", NodeID = "name", sinksRight = FALSE, fontSize = 14, colourScale = node_colour,  NodeGroup = "ColourGroup", width=700, height=500)
-
-sankey <- htmlwidgets::prependContent(sankey, htmltools::tags$h1("Change in unpaid caring during the pandemic"))
-
-sankey
 
 
 #Saving data to excel sheet
