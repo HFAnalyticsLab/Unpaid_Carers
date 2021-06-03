@@ -29,22 +29,22 @@ all<- readRDS(here::here('data','care_type','caring_pandemic.rds'))
 # Data cleaning -----------------------------------------------------------
 
 all$carer<-factor(all$aidhh, levels=c(1,2), labels=c("Yes", "No"))
+# all$carer_pre<-factor(all$j_aidhh, levels=c(1,2),labels=c("Yes", "No"))
 
 all<-all %>% 
   mutate(care_hours= factor(case_when(aidhh==1 & aidhrs_cv %in% as.character(c(4:7,9)) ~ 2,
                         aidhh==1 & aidhrs_cv %notin% as.character(c(4:7,9))~ 1,
                         aidhh==2 ~ 3), 
          levels=c(2,1,3), labels=c("Providing 20+ hours of care", "Providing <20 hours of care", "Not providing care")),
-         carer_pre=case_when((j_aidxhh==1|j_aidhh==1)~1,
+         carer_pre=factor(case_when((j_aidxhh==1|j_aidhh==1)~1,
                              j_aidxhh==2 & j_aidhh==2 ~2,
                              j_aidxhh==2 & j_aidhh<0 ~2,
-                             j_aidxhh<0 & j_aidhh==2~2),
-         care_hours_pre= factor(case_when(carer_pre==1 & j_aidhrs %in% as.character(c(4:7,9))~ 2,
-                                   carer_pre==1 & j_aidhrs %notin% as.character(c(4:7,9))~ 1,
-                                   carer_pre==2 ~ 3),
+                             j_aidxhh<0 & j_aidhh==2~2), levels=c(1,2), labels=c("Yes", "No")),
+         care_hours_pre= factor(case_when(j_aidhh==1 & j_aidhrs %in% as.character(c(4:7,9))~ 2,
+                                   j_aidhh==1 & j_aidhrs %notin% as.character(c(4:7,9))~ 1,
+                                   j_aidhh==2 ~ 3),
          levels=c(2,1,3), labels=c("Providing 20+ hours of care", "Providing <20 hours of care", "Not providing care")))
 
-all$carer_pre<-factor(all$carer_pre, levels=c(1,2), labels=c("Yes", "No"))
 
 
 # Survey design ------------------------------------------------------------
@@ -60,10 +60,19 @@ options(survey.lonely.psu="adjust")
 
 # Descriptive ------------------------------------------------------------
 
+#Proportion of new carers 
 
 uos_design %>% 
-  tbl_svysummary(by="carer" ,include = c(carer,carer_pre),
+  tbl_svysummary(by="care_hours",include = c(care_hours,carer_pre),
                  type=everything()~"categorical") %>% 
   bold_labels() 
+
+#Proportion of new carers by caring status 
+
+uos_design %>% 
+  tbl_svysummary(by="carer",include = c(carer,carer_pre),
+                 type=everything()~"categorical") %>% 
+  bold_labels() 
+
 
 
