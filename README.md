@@ -17,7 +17,7 @@ Source: Understanding Society Data set, [Wave 10 (2018/19)](https://beta.ukdatas
 
 Data can be downloaded from UK Data Service (see data source for link)
 The code can be used to clean and analyse the data. 
-For the current analysis, we use special weightings provided by Unveristy of Essex, which is not included in the repository. To run the analysis, the weighting type will need to be changed.  
+For the current analysis, we use special weightings provided by Unveristy of Essex, which is not included in the repository. **To run the analysis, the weighting type will need to be changed**.  
 
 ### Requirements
 
