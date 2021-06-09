@@ -2,7 +2,7 @@
 # Project: Unpaid Carers during the pandemic
 # Purpose: Preliminary Analysis
 # Author: Anne Alarilla
-# Date: 17/05/2021
+# Date: 09/06/2021
 # 
 
 # Set up ------------------------------------------------------------------
@@ -144,13 +144,6 @@ sankey_plot_data<-t1 %>%
   arrange(desc(In)) %>% 
   arrange(desc(Out))
 
-# sankey_plot_data<-t1 %>% 
-#   mutate(In=case_when(care_hours_pre != "" ~ paste0(care_hours_pre, sep='_1')),
-#          Out=case_when(care_hours != "" ~ paste0(care_hours, sep='_2'))) %>% 
-#   drop_na() %>% 
-#   select(In, Out, Freq) %>% 
-#   arrange(desc(In)) %>% 
-#   arrange(desc(Out))
 
 nodes<- sankey_plot_data %>% 
   select(In, Out) %>% 
@@ -168,11 +161,6 @@ sankey_plot_id<- sankey_plot_data %>%
 
 sankey_plot_id<-data.frame(sankey_plot_id)
 
-# nodes<- nodes %>% 
-#   mutate(ColourGroup=case_when(name== "Providing 20+ hours of care pw" ~ "#dd0031",
-#                                name== "Providing <20 hours of care pw" ~ "#53a9cd",
-#                                name=="Not providing care" ~ "#744284",
-#                                ))
 
 node_colour<-'d3.scaleOrdinal() .domain(["THF_red","THF_50pct_light_blue","THF_1_purple"])
               .range(["#dd0031","#53a9cd","#744284"])'
@@ -183,42 +171,29 @@ nodes<- nodes %>%
                                name %in% c("Providing <20 hours of care pw (12.8%)", "Providing <20 hours of care pw (22.8%)") ~ "THF_50pct_light_blue",
                                name %in% c("Not providing care (82.7%)", "Not providing care (68.2%)")~ "THF_1_purple"))
 
-sankeyNetwork(Links = sankey_plot_id, Nodes = nodes, 
+sankey<-sankeyNetwork(Links = sankey_plot_id, Nodes = nodes, 
               Source = "IDin", Target = "IDout", 
               Value = "Freq", NodeID = "name", sinksRight = FALSE, fontSize = 16, colourScale = node_colour, 
               NodeGroup = "ColourGroup", iterations=0, units="respondents", nodeWidth=25, fontFamily="Arial", height=750, width=780)
 
-# 
-# fig <- plot_ly(
-#   type = "sankey",
-#   arrangement = "snap",
-#   orientation = "h",
-# 
-#   node = list(
-#     label = nodes$name,
-#     color = nodes$ColourGroup,
-#     pad = 15,
-#     thickness = 20,
-#     line = list(
-#       color = "black",
-#       width = 0.5
-#     )
-#   ),
-# 
-#   link = list(
-#     source = sankey_plot_id$IDin,
-#     target = sankey_plot_id$IDout,
-#     value =  sankey_plot_id$Freq
-#   )
-# )
-# fig <- fig %>% layout(
-#   title = "",
-#   font = list(
-#     size = 12
-#   )
-# )
-# 
-# fig
+#Add headings
+library(htmlwidgets)
+htmlwidgets::onRender(sankey, '
+  function(el) { 
+    var cols_x = this.sankey.nodes().map(d => d.x).filter((v, i, a) => a.indexOf(v) === i);
+    var labels = ["Pre pandemic (2018/2019)", "During the second wave of the pandemic (Nov 2020/Jan 2021)"];
+    cols_x.forEach((d, i) => {
+      d3.select(el).select("svg")
+        .append("text")
+        .attr("x", d)
+        .attr("y", 12)
+        .text(labels[i])
+        .style("font-size", 14);
+        
+    })
+  } 
+')
+
 
 
 #Saving data to excel sheet
@@ -268,7 +243,6 @@ tbl_svysummary(by="care_hours",include = c(care_hours, hh_child,resp_child),
   add_p() %>% 
   bold_labels() %>% 
   as.tibble() %>% 
-  # modify_spanning_header(c("stat_1", "stat_2", "stat_3")~"**Female**") %>% 
   mutate_if(is.character, ~replace(., is.na(.), ""))
 
 
@@ -288,109 +262,8 @@ t3<-cbind(fem,male)
 
 clean_names(t3)
 
-#Graph of gender and childcare by caring status 
-# tab_s<-svytable(~gender_lab+ hh_child +care_hours, design=uos_design) %>% 
-#   as.data.frame() %>% 
-#   # group_by(care_hours) %>% 
-#   # mutate(sum_care=sum(Freq), prop_care=Freq/sum_care,) %>% 
-#   # ungroup() %>% 
-#   group_by(care_hours,gender_lab) %>% 
-#   mutate(sum_gender=sum(Freq),prop_gender=Freq/sum_gender) %>% 
-#   ungroup()
-# 
-# tab_s %>% 
-#   mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care",
-#                        care_hours=="High Level Caring"~"Providing 20+ hours of care",
-#                        care_hours=="No caring"~"Not providing care")) %>% 
-#   ggplot(., aes(x = gender_lab, y = prop_gender*100)) +
-#   # geom_col(aes(color = hh_child, fill = hh_child), position = position_dodge(0.8), width = 0.7)+
-#   geom_bar(aes(color = hh_child, fill = hh_child), position ="stack", stat="identity")+
-#   theme_THF()+
-#   # scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20))+
-#   facet_wrap(~lab)+
-#   scale_fill_THF()+
-#   scale_colour_THF()+
-#   labs(x= "", y="", title="")+
-#   theme(plot.title = element_text(size=14),
-#         legend.text=element_text(size=14), legend.position="bottom", 
-#         axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14),
-#         strip.text=element_text(size=14))
-# 
-# #Saving graph
-# ggsave(here::here('outputs','care.png'),dpi=300,
-#        width = 10, height = 6.5) 
 
-# tab_sx<-svytable(~gender_lab+ resp_child +care_hours, design=uos_design) %>% 
-#   as.data.frame() %>% 
-#   group_by(care_hours) %>%
-#   mutate(sum_care=sum(Freq)) %>%
-#   ungroup() %>%
-#   group_by(care_hours,gender_lab) %>% 
-#   mutate(sum_gender=sum(Freq),prop_gender=sum_gender/sum_care, prop_child=Freq/sum_gender) %>% 
-#   ungroup() 
-# 
-# tab_sx %>% 
-#   mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care",
-#                        care_hours=="High Level Caring"~"Providing 20+ hours of care",
-#                        care_hours=="No caring"~"Not providing care")) %>% 
-#   ggplot(., aes(x = gender_lab, y = prop_gender))+
-#   # geom_col(aes(color = resp_child, fill = resp_child), position = position_dodge(0.8), width = 0.7)+
-#   geom_bar(aes(color = resp_child, fill = resp_child), position="stack", stat="identity")+
-#   theme_THF()+
-#   # scale_y_continuous(limits = c(0,100), breaks = seq(0, 100, by = 20))+
-#   facet_wrap(~lab)+
-#   scale_fill_THF()+
-#   scale_colour_THF()+
-#   labs(x= "", y="", title="")+
-#   theme(plot.title = element_text(size=14),
-#         legend.text=element_text(size=14), legend.position="bottom", 
-#         axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14),
-#         strip.text=element_text(size=14))
-# 
-
-##Caring status and childcare responsibility by gender 
-
-tab_gender_care<-svytable(~gender_lab+care_hours+resp_child, design=uos_design) %>% 
-  as.data.frame() %>% 
-  group_by(gender_lab,care_hours) %>% 
-  mutate(sum_gender_care=sum(Freq)) %>% 
-  ungroup() %>% 
-  group_by(gender_lab) %>% 
-  mutate(sum_gender=sum(Freq)) %>% 
-  group_by(resp_child,gender_lab) %>% 
-  mutate(sum_child_gender=sum(Freq)) %>% 
-  ungroup() %>% 
-  mutate(prop_care_gender=sum_gender_care/sum_gender, prop_child_gender_care=Freq/sum_gender) %>% 
-  mutate(lab_prop=ifelse(prop_child_gender_care<0.01, "",percent(prop_child_gender_care,1)))
-
-tab_gender_care
-
-
-tab_gender_care %>% 
-  mutate(lab=case_when(care_hours=="Low Level Caring"~"Providing <20 hours of care pw",
-                       care_hours=="High Level Caring"~"Providing 20+ hours of care pw",
-                       care_hours=="No caring"~"Not providing care")) %>% 
-  ggplot(., aes(x = gender_lab, y = prop_child_gender_care*100, label=lab_prop))+
-  # geom_col(aes(color = resp_child, fill = resp_child), position = position_dodge(0.8), width = 0.7)+
-  geom_bar(aes(color = resp_child, fill = resp_child),position="stack", stat="identity")+
-  geom_text(aes(fill=resp_child, label=lab_prop), colour="White",position = position_stack(vjust = 0.5))+
-  theme_THF()+
-  scale_y_continuous(limits = c(0,80), breaks = seq(0, 80, by = 10))+
-  facet_wrap(~lab)+
-  scale_fill_THF()+
-  scale_colour_THF()+
-  labs(x= "", y="% respondents", title="")+
-  theme(plot.title = element_text(size=14),
-        legend.text=element_text(size=14), legend.position="bottom", 
-        axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14),
-        strip.text=element_text(size=14))
-
-##Saving graph
-ggsave(here::here('outputs','care_childcare_by_gender.png'),dpi=300,
-       width = 10, height = 6.5) 
-
-
-##gender and childcare responsibility by caring status 
+##Graphs
 tab_care<-svytable(~gender_lab+care_hours+resp_child, design=uos_design) %>% 
   as.data.frame() %>% 
   group_by(care_hours) %>% 
@@ -407,15 +280,8 @@ tab_care %>%
          levels=c("Not providing care","Providing <20 hours of care pw","Providing 20+ hours of care pw"))) %>% 
   ggplot(., aes(x = gender_lab, y = prop_care*100, label=lab_prop))+
   geom_col(aes(color = resp_child, fill = resp_child), position = position_dodge(0.8), width = 0.7)+
-  # geom_bar(aes(color = resp_child, fill = resp_child),position="stack", stat="identity")+
-  # geom_label(aes(fill=resp_child, label=lab_prop),position = position_stack(vjust = 0.5),
-  #           show.legend = FALSE, na.rm=TRUE, colour="White", label.size=NA)+
   geom_text(aes(fill=resp_child, label=lab_prop), position = position_dodge(width=0.8),
              show.legend = FALSE, na.rm=TRUE, colour="black", vjust=-0.5)+
-  # geom_bar_text(aes(fill=resp_child, label=lab_prop),position="stack")+
-  # geom_text()+
-  # geom_label(aes(fill=resp_child, label=lab_prop), position = position_dodge(width=0.8), vjust=0.75,
-  #          show.legend = FALSE, na.rm=TRUE, colour="White", label.size=NA, size=4)+
   theme_THF()+
   scale_y_continuous(limits = c(0,60), breaks = seq(0, 60, by = 20))+
   facet_grid(cols=vars(lab))+
@@ -428,7 +294,7 @@ tab_care %>%
        strip.text=element_text(size=12), axis.line.x = element_line(colour='grey20'))
 
 #Saving graph
-ggsave(here::here('outputs','gender_childcare_by_care.png'),dpi=300,
+ggsave(here::here('outputs','gender_childcare_by_care.pdf'),dpi=300,
        width = 10, height =6.5) 
 
 
@@ -454,11 +320,10 @@ t4<-uos_design %>%
   as.tibble() %>% 
   mutate_if(is.character, ~replace(., is.na(.), ""))
 
-clean_names(t4)
+uos_design %>% 
+  tbl_svysummary(include=c(race_plus),type=everything()~"categorical")
 
-# tbl<-svytable(~race_plus+care_hours, design=uos_design)  
-# c<-svychisq(~race_plus+care_hours, uos_design_xw, statistic="adjWald")
-# summary(tbl, statistic="adjWald")
+clean_names(t4)
 
 tab_s<-svytable(~race_plus+care_hours, design=uos_design) %>% 
   as.data.frame() %>% 
@@ -466,6 +331,7 @@ tab_s<-svytable(~race_plus+care_hours, design=uos_design) %>%
   mutate(sum_care_hours=sum(Freq)) %>% 
   ungroup() %>% 
   mutate(prop_race=Freq/sum_care_hours, lab_prop=percent(prop_race,0.1))
+
 
 ##Graph
 
@@ -487,7 +353,7 @@ tab_s %>%
         axis.text.x=element_text(size=14, angle = 0, hjust=0.45),axis.text.y=element_text(size=14))
 
 ##Saving Graph
-ggsave(here::here('outputs','ethnicity.png'),dpi=300,
+ggsave(here::here('outputs','ethnicity.pdf'),dpi=300,
        width = 10, height = 6.5) 
 
 ##Table for excel sheet
@@ -543,15 +409,8 @@ tab_s %>%
         axis.text.x=element_text(size=14, angle = 0, hjust=0.5),axis.text.y=element_text(size=14))
 
 ##Saving graph 
-ggsave(here::here('outputs','care_proximity.png'),dpi=300,
+ggsave(here::here('outputs','care_proximity.pdf'),dpi=300,
        width = 10, height = 6.5) 
-
-# 
-# tbl<-svytable(~care_loc_cv+care_hours, design=uos_design_xw)
-# c<-svychisq(~care_loc_cv+care_hours, uos_design_xw)
-# 
-# svychisq(~care_loc_cv+care_hours, uos_design_xw, statistic="adjWald")
-# summary(tbl, statistic="adjWald")
 
 ##Saving excel sheet
 
@@ -622,7 +481,7 @@ df %>%
         axis.text.x=element_text(size=14, angle = 0, hjust=0.5),axis.text.y=element_text(size=14))
 
 ##Saving graph 
-ggsave(here::here('outputs','care_outcomes.png'),dpi=300,
+ggsave(here::here('outputs','care_outcomes.pdf'),dpi=300,
        width = 10, height = 6.5) 
 
 
@@ -638,4 +497,5 @@ addDataFrame(as.data.frame(t6), sheet=sheet, startColumn=1, row.names=FALSE)
 
 
 saveWorkbook(wb, here::here('outputs', 'Unpaid_Carer.xlsx'))
+
 
