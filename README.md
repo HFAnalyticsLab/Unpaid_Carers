@@ -59,4 +59,4 @@ This project is licensed under the [MIT License](link to license file).
 ## Acknowledgments
 
 * Code to download the survey data was adopted from code deposited to [Understanding Society](https://www.understandingsociety.ac.uk/documentation/mainstage/syntax) by Dr. David Bartram
-* Univeristy of Essex provided weightings for this analysis
+* Dr Jamie Moore from Univeristy of Essex for providing weightings for this analysis
