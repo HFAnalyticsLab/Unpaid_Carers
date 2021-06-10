@@ -1,12 +1,40 @@
 # Unpaid carers during the pandemic
 
-#### Project Status: [Planning]
+#### Project Status: [Completed]
 
 ## Project Description
 
 The impact of unpaid caring is closely related to the intensity of the care provision. Evidence suggests that unpaid carers were affected negatively by the COVID-19 pandemic but previous studies have not made a distinction between different caring types. This analysis explores who the unpaid carers are during the second wave of the pandemic, their state of health and how they have been able to manage their own health through accesing healthcare services. It will make a disnticion between different caring types.
 
 Currently  the code in this repo provides descriptive analysis
+
+### Defintions of caring
+
+#### During the second wave of pandemic (November 2020/ January 2021) 
+Unpaid carers were defined if respondents said yes to the one of the following:
+
+1. Is there anyone living with you who is sick, disabled or elderly whom you look after or give special help to (for example, a sick, disabled or elderly relative, husband, wife or friend etc)?
+2. Thinking about the last 4 weeks, did you provide help or support to family, friends or neighbours who do not live in the same house/flat as you?
+
+##### Caring status during the second wave was defined as:
+
+* Not providing care: Not an unpaid carer during the second wave of the pandemic
+* <20 hours of care per week: Carers during the second wave of the pandemic providing <20 hours of care per week or not providing help for with personal tasks
+* 20+ hours of care per week: Carers during the seond wave of the pandemic providing 20+ hours of care per week or providing help with personal tasks
+
+
+#### Pre pandemic (2018/2019)
+Upaid carers were defined if respondents said yes to one of the following: 
+
+1. Do you provide regular service or help for any sick, disabled or elderly person not living with you?
+2. Is there anyone living with you who is sick, disabled, or elderly, who you give special help to?
+
+##### Caring status pre pandemic was defined as:
+
+* Not providing care: Not an unpaid carer pre pandemic
+* <20 hours of care per week: Carers pre pandemic providing <20 hours of care per week 
+* 20+ hours of care per week: Carers pre pandemic providing 20+ hours of care per week 
+
 
 ## Data source
 
