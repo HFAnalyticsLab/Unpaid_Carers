@@ -35,7 +35,7 @@ Unpaid carers were defined if respondents said yes to one of the following:
 * <20 hours of care per week: Carers pre pandemic providing <20 hours of care per week 
 * 20+ hours of care per week: Carers pre pandemic providing 20+ hours of care per week 
 
-Note: Some respondents provided responses during April - May 2020 and were not excluded due to small numbers
+Note: Some respondents provided responses during March - May 2020 and were not excluded due to small numbers
 
 ## Data source
 
