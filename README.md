@@ -23,8 +23,8 @@ Unpaid carers were defined if respondents said yes to the one of the following:
 * 20+ hours of care per week: Carers during the seond wave of the pandemic providing 20+ hours of care per week or providing help with personal tasks
 
 
-#### Pre pandemic (2018/2019)
-Upaid carers were defined if respondents said yes to one of the following: 
+#### Pre pandemic (2018/2020)
+Unpaid carers were defined if respondents said yes to one of the following: 
 
 1. Do you provide regular service or help for any sick, disabled or elderly person not living with you?
 2. Is there anyone living with you who is sick, disabled, or elderly, who you give special help to?
@@ -35,10 +35,11 @@ Upaid carers were defined if respondents said yes to one of the following:
 * <20 hours of care per week: Carers pre pandemic providing <20 hours of care per week 
 * 20+ hours of care per week: Carers pre pandemic providing 20+ hours of care per week 
 
+Note: ~10 respondents provided responses during April - May 2020
 
 ## Data source
 
-Source: Understanding Society Data set, [Wave 10 (2018/19)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=6614) and COVID-19 survey Waves [6 (November 2020) and 7 (January 2021)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=8644)
+Source: Understanding Society Data set, [Wave 10 (2018/20)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=6614) and COVID-19 survey Waves [6 (November 2020) and 7 (January 2021)](https://beta.ukdataservice.ac.uk/datacatalogue/studies/study?id=8644)
 
 
 ## How does it work?
