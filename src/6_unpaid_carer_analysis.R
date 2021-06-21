@@ -181,7 +181,7 @@ library(htmlwidgets)
 htmlwidgets::onRender(sankey, '
   function(el) { 
     var cols_x = this.sankey.nodes().map(d => d.x).filter((v, i, a) => a.indexOf(v) === i);
-    var labels = ["Pre pandemic (2018/2019)", "During the second wave of the pandemic (Nov 2020/Jan 2021)"];
+    var labels = ["Pre pandemic (2018/2020)", "During the second wave of the pandemic (Nov 2020/Jan 2021)"];
     cols_x.forEach((d, i) => {
       d3.select(el).select("svg")
         .append("text")
